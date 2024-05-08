@@ -59,6 +59,30 @@
           "Port": 8080
         }
       ]
+    },
+    {
+      "UpstreamPathTemplate": "/groups/{groupId}/expenses",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/expense/{groupId}/expenses",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "expense-service",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/groups/{groupId}/expenses",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/expense",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "expense-service",
+          "Port": 8080
+        }
+      ]
     }
   ]
 }
