@@ -7,9 +7,9 @@ namespace GroupService.Controller;
 [Route("group")]
 public class GroupController : ControllerBase {
 
-    [HttpGet("members")]
-    public IActionResult AllMembersFromGroup([FromBody] GroupMembersReq request) {
-        if(request.GroupId == 1) {
+    [HttpGet("/{groupId}/members")]
+    public IActionResult AllMembersFromGroup([FromRoute] int groupId) {
+        if(groupId == 1) {
             return Ok("yo mama says hi");
         }
         return BadRequest("No bueno, to test this endpoint OK result insert 1 for group id");
@@ -23,7 +23,7 @@ public class GroupController : ControllerBase {
         return BadRequest("No bueno, to test this endpoint OK result insert 'admin' for name");
     }
     
-    [HttpPost()]
+    [HttpPost("join")]
     public IActionResult Join([FromBody] JoinGroupReq request) {
         if(request.GroupId == 1 && request.UserId == 1) {
             return Ok("User joined group");
