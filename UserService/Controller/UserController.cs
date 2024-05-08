@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace UserService.Controller;
 
 [ApiController]
-[Route("[controller]")]
+[Route("user")]
 public class UserController : ControllerBase {
     /// <summary>
     /// Attempts to log in a user, returning a 200 OK if successful, 400 Bad Request if not

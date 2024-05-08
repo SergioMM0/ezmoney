@@ -1,110 +1,26 @@
 ﻿{
   "Routes": [
     {
-      "UpstreamPathTemplate": "login",
+      "UpstreamPathTemplate": "/login",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "user/login", 
+      "DownstreamPathTemplate": "/user/login", 
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
           "Host": "user-service",
-          "Port": 1000
+          "Port": 8080
         }
       ]
     },
     {
-      "UpstreamPathTemplate": "register",
+      "UpstreamPathTemplate": "/register",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "user/register",
+      "DownstreamPathTemplate": "/user/register",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
           "Host": "user-service",
-          "Port": 1000
-        }
-      ]
-    },
-    {
-      "UpstreamPathTemplate": "users/{userId}/groups",
-      "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "GroupService/GetGroups/{userId}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "group-service",
-          "Port": 2000
-        }
-      ]
-    },
-    {
-      "UpstreamPathTemplate": "groups",
-      "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "GroupService/PostGroup",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "group-service",
-          "Port": 2000
-        }
-      ]
-    },
-    {
-      "UpstreamPathTemplate": "groups/{groupId}/join",
-      "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "GroupService/JoinGroup/{groupId}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "group-service",
-          "Port": 2000
-        }
-      ]
-    },
-    {
-      "UpstreamPathTemplate": "groups",
-      "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "GroupService/PostGroup",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "group-service",
-          "Port": 2000
-        }
-      ]
-    },
-    {
-      "UpstreamPathTemplate": "groups/{groupId}/leave",
-      "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "GroupService/LeaveGroup/{groupId}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "group-service",
-          "Port": 2000
-        }
-      ]
-    },
-    {
-      "UpstreamPathTemplate": "groups/{groupId}/expenses",
-      "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "ExpenseService/GetExpenses/{groupId}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "expense-service",
-          "Port": 3000
-        }
-      ]
-    },
-    {
-      "UpstreamPathTemplate": "groups/{groupId}/expenses",
-      "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "ExpenseService/PostExpense/{groupId}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "expense-service",
-          "Port": 3000
+          "Port": 8080
         }
       ]
     }
