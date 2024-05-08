@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace UserService.Controller;
 
 [ApiController]
-[Route("[controller]")]
+[Route("user")]
 public class UserController : ControllerBase {
     /// <summary>
     /// Attempts to log in a user, returning a 200 OK if successful, 400 Bad Request if not
@@ -12,7 +12,7 @@ public class UserController : ControllerBase {
     /// </summary>
     /// <param name="request"></param>
     /// <returns>{IActionResult}</returns>
-    [HttpPost]
+    [HttpPost("login")]
     public IActionResult Login([FromBody] LoginUserReq request) {
         if(request.Name == "admin") {
             return Ok("Login successful");
@@ -26,7 +26,7 @@ public class UserController : ControllerBase {
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost]
+    [HttpPost("register")]
     public IActionResult Register([FromBody] RegisterUserReq request) {
         if(request.Name == "admin") {
             return Ok("Login successful");
