@@ -7,7 +7,7 @@ namespace ExpenseService.Controller;
 [Route("expense")]
 public class ExpenseController : ControllerBase {
     
-    [HttpGet("/{groupId}/expenses")]
+    [HttpGet("{groupId}/expenses")]
     public IActionResult AllExpensesFromGroup([FromRoute] int groupId) {
         if(groupId == 1) {
             return Ok("many expenses ayayay");
