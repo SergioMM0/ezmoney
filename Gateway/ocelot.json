@@ -3,7 +3,7 @@
     {
       "UpstreamPathTemplate": "login",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "UserService/Login", 
+      "DownstreamPathTemplate": "user/login", 
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -15,7 +15,7 @@
     {
       "UpstreamPathTemplate": "register",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "UserService/Register",
+      "DownstreamPathTemplate": "user/register",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
