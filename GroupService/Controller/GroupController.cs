@@ -35,7 +35,7 @@ public class GroupController : ControllerBase {
     
     [HttpPost("join")]
     public IActionResult Join([FromBody] JoinGroupReq request) {
-        if(request.GroupId == 1 && request.UserId == 1) {
+        if(request.Token == 1 && request.UserId == 1) {
             return Ok("User joined group");
         }
         return BadRequest("No bueno, to test this endpoint OK result insert 1 and 1 for both ids");
