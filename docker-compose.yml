@@ -5,6 +5,14 @@
       context: .
       dockerfile: Gateway/Dockerfile
     ports:
-        - "80:80"
-    #depends_on:
-    #  - TODO
+        - "8080:8080"
+    depends_on:
+      - user-service
+
+  user-service:
+    image: user-service
+    build:
+      context: .
+      dockerfile: UserService/Dockerfile
+    ports:
+        - "1000:8080"
