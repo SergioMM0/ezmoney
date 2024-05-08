@@ -7,12 +7,22 @@ namespace GroupService.Controller;
 [Route("group")]
 public class GroupController : ControllerBase {
 
+    /* NOT IN THE INITIAL REQUIREMENTS, MIGHT BE USED LATER
     [HttpGet("/{groupId}/members")]
     public IActionResult AllMembersFromGroup([FromRoute] int groupId) {
         if(groupId == 1) {
             return Ok("yo mama says hi");
         }
         return BadRequest("No bueno, to test this endpoint OK result insert 1 for group id");
+    }
+    */
+    
+    [HttpGet("{userId}/groups")] //group/1/groups
+    public IActionResult GetAllGroupsOfUser([FromRoute] int userId) {
+        if(userId == 1) {
+            return Ok("yo mama says hi");
+        }
+        return BadRequest("No bueno, to test this endpoint OK result insert 1 for user id");
     }
     
     [HttpPost]
