@@ -1,11 +1,10 @@
-﻿namespace Domain;
+﻿namespace Domain.DTO.Expense;
 
-public class Expense {
+public class ExpenseResponse {
     public int Id { get; set; }
     public int OwnerId { get; set; }
     public int GroupId { get; set; }
     public double Amount { get; set; }
     public DateTime Date { get; set; }
     public string Description { get; set; } = null!;
-    public List<int> Participants { get; set; } = null!;
 }

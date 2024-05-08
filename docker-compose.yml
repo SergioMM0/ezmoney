@@ -1,13 +1,36 @@
-﻿services:
+services:
   gateway:
     image: gateway
     build:
       context: .
       dockerfile: Gateway/Dockerfile
     ports:
-        - "80:80"
-    #depends_on:
-    #  - TODO
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - group-service
+      - expense-service
+  user-service:
+    image: user-service
+    build:
+      context: .
+      dockerfile: UserService/Dockerfile
+    ports:
+      - "1000:8080"
+  group-service:
+    image: group-service
+    build:
+      context: .
+      dockerfile: GroupService/Dockerfile
+    ports:
+      - "2000:8080"
+  expense-service:
+    image: expense-service
+    build:
+      context: .
+      dockerfile: ExpenseService/Dockerfile
+    ports:
+      - "3000:8080"
   rabbitmq:
     user: "999"
     image: rabbitmq:3-management-alpine
@@ -20,15 +43,3 @@
     ports:
       - '5672:5672'
       - '15672:15672'
-  userservice:
-    image: userservice
-    build:
-      context: .
-      dockerfile: UserService/Dockerfile
-    environment:
-      - EASYNETQ_CONNECTION_STRING=host=rabbitmq;port=5672;virtualHost=/;username=guest;password=guest
-    ports:
-      - "5000:5000"
-    depends_on:
-      - rabbitmq
-    
