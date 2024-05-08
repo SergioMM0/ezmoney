@@ -9,6 +9,7 @@
     depends_on:
       - user-service
       - group-service
+      - expense-service
   user-service:
     image: user-service
     build:
@@ -23,3 +24,10 @@
       dockerfile: GroupService/Dockerfile
     ports:
       - "2000:8080"
+  expense-service:
+    image: expense-service
+    build:
+      context: .
+      dockerfile: ExpenseService/Dockerfile
+    ports:
+      - "3000:8080"
