@@ -4,3 +4,7 @@
     build:
       context: .
       dockerfile: Gateway/Dockerfile
+    ports:
+        - "80:80"
+    #depends_on:
+    #  - TODO
