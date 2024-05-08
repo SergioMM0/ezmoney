@@ -1,4 +1,5 @@
 ﻿using Domain.DTO.User;
+using Domain.packages;
 using Microsoft.AspNetCore.Mvc;
 
 namespace UserService.Controller;
@@ -14,6 +15,8 @@ public class UserController : ControllerBase {
     /// <returns>{IActionResult}</returns>
     [HttpPost]
     public IActionResult Login([FromBody] LoginUserReq request) {
+        var rpcClient = new RpcClient();
+        
         if(request.Name == "admin") {
             return Ok("Login successful");
         }
@@ -33,4 +36,5 @@ public class UserController : ControllerBase {
         }
         return BadRequest("No bueno");
     }
+    
 }

@@ -8,3 +8,27 @@
         - "80:80"
     #depends_on:
     #  - TODO
+  rabbitmq:
+    user: "999"
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+  userservice:
+    image: userservice
+    build:
+      context: .
+      dockerfile: UserService/Dockerfile
+    environment:
+      - EASYNETQ_CONNECTION_STRING=host=rabbitmq;port=5672;virtualHost=/;username=guest;password=guest
+    ports:
+      - "5000:5000"
+    depends_on:
+      - rabbitmq
+    
