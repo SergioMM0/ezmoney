@@ -16,11 +16,19 @@
       dockerfile: UserService/Dockerfile
     ports:
       - "1000:8080"
-        
-    group-service:
-      image: group-service
+  
+  group-service:
+    image: group-service
+    build:
+      context: .
+      dockerfile: GroupService/Dockerfile
+    ports:
+      - "2000:8082"
+  
+    expense-service:
+      image: expense-service
       build:
         context: .
-        dockerfile: GroupService/Dockerfile
+        dockerfile: ExpenseService/Dockerfile
       ports:
-        - "1001:8082"
+        - "3000:8080"
