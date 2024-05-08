@@ -14,7 +14,7 @@ public class UserController : ControllerBase {
     /// <returns>{IActionResult}</returns>
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginUserReq request) {
-        if(request.Name == "admin") {
+        if(request.PhoneNumber == "12345678") {
             return Ok("Login successful");
         }
         return BadRequest("No bueno");
