@@ -23,6 +23,42 @@
           "Port": 8080
         }
       ]
+    },
+    {
+      "UpstreamPathTemplate": "/users/{userId}/groups",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/group/{userId}/groups",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "group-service",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/groups",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/group",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "group-service",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/groups/join",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/group/join",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "group-service",
+          "Port": 8080
+        }
+      ]
     }
   ]
 }

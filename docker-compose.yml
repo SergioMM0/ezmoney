@@ -8,7 +8,7 @@
       - "8080:8080"
     depends_on:
       - user-service
-
+      - group-service
   user-service:
     image: user-service
     build:
@@ -16,11 +16,10 @@
       dockerfile: UserService/Dockerfile
     ports:
       - "1000:8080"
-        
-    group-service:
-      image: group-service
-      build:
-        context: .
-        dockerfile: GroupService/Dockerfile
-      ports:
-        - "1001:8082"
+  group-service:
+    image: group-service
+    build:
+      context: .
+      dockerfile: GroupService/Dockerfile
+    ports:
+      - "2000:8080"
