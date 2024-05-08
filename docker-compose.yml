@@ -5,7 +5,7 @@
       context: .
       dockerfile: Gateway/Dockerfile
     ports:
-        - "8080:8080"
+      - "8080:8080"
     depends_on:
       - user-service
 
@@ -15,4 +15,12 @@
       context: .
       dockerfile: UserService/Dockerfile
     ports:
-        - "1000:8080"
+      - "1000:8080"
+        
+    group-service:
+      image: group-service
+      build:
+        context: .
+        dockerfile: GroupService/Dockerfile
+      ports:
+        - "1001:8082"
