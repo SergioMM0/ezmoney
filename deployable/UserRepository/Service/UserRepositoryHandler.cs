@@ -22,30 +22,40 @@ public class UserRepositoryHandlers : IRequestHandler
     
     private string HandleCreateUser(object data)
     {
-        var user = JsonConvert.DeserializeObject<User>(data.ToString());
-        Console.WriteLine($"Creating user: {user.Name}");
-        _userRepositoryService.AddUser(user);
-        // Simulate user creation logic
-        return JsonConvert.SerializeObject(user);
+        try {
+            var user = JsonConvert.DeserializeObject<User>(data.ToString());
+            User userAdded = _userRepositoryService.AddUser(user);
+            var response = new ApiResponse {Success = true, Data = JsonConvert.SerializeObject(userAdded)};
+            return JsonConvert.SerializeObject(response);
+        } catch (Exception e) {
+            var response = new ApiResponse { Success = false, ErrorMessage = e.Message };
+            return JsonConvert.SerializeObject(response);
+        }
+        
     }
 
     private string HandleGetAllUsers(object data)
     {
-        List<User> users = new List<User>();
-        users = _userRepositoryService.GetAllUsers();
-        return JsonConvert.SerializeObject(users);
+        try {
+            List<User> users = new List<User>();
+            users = _userRepositoryService.GetAllUsers();
+            var response = new ApiResponse {Success = true, Data = JsonConvert.SerializeObject(users)};
+            return JsonConvert.SerializeObject(response);
+        } catch (Exception e) {
+            var response = new ApiResponse { Success = false, ErrorMessage = e.Message };
+            return JsonConvert.SerializeObject(response);
+        }
     }
     private string HandleLoginUser(object data)
     {
         try {
             var user = JsonConvert.DeserializeObject<User>(data.ToString());
-            Console.WriteLine($"Logging in user: {user.PhoneNumber}");
             User userLogin = _userRepositoryService.LoginUser(user);
             var response = new ApiResponse {Success = true, Data = JsonConvert.SerializeObject(userLogin)};
             return JsonConvert.SerializeObject(response);
-        } catch (Exception e) {
-            Console.WriteLine(e);
-            throw;
+        } catch (Exception ex) {
+            var response = new ApiResponse { Success = false, ErrorMessage = ex.Message };
+            return JsonConvert.SerializeObject(response);
         }
         
         
