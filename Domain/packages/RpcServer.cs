@@ -1,79 +1,72 @@
-﻿namespace Domain.packages; 
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Collections.Concurrent;
 using System.Text;
+using Domain.packages.Interfaces;
 
-class RpcServer<T>
-{
-    private readonly IModel channel;
-    private readonly string queueName;
+namespace Domain.packages {
+    public class RpcServer {
+        private readonly IModel channel;
+        private readonly string queueName;
+        private readonly IRequestHandler requestHandler; // Handler interface
 
-    public RpcServer(string topic)
-    {
-        var factory = new ConnectionFactory() {
-            HostName = "rabbitmq",
-            Port = 5672,
-            VirtualHost = "/",
-            UserName = "guest",
-            Password = "guest"
-        };
+        public RpcServer(string topic, IRequestHandler handler) {
+            var factory = new ConnectionFactory {
+                HostName = "rabbitmq",
+                Port = 5672,
+                VirtualHost = "/",
+                UserName = "guest",
+                Password = "guest"
+            };
 
-        var connection = factory.CreateConnection();
-        channel = connection.CreateModel();
-        queueName = topic;
+            var connection = factory.CreateConnection();
+            channel = connection.CreateModel();
+            queueName = topic;
+            requestHandler = handler;
 
-        channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-        channel.BasicQos(0, 1, false);
+            channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false,
+                arguments: null);
+            channel.BasicQos(0, 1, false);
 
-        var consumer = new EventingBasicConsumer(channel);
-        consumer.Received += OnReceived;
+            var consumer = new EventingBasicConsumer(channel);
+            consumer.Received += OnReceived;
+            channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
 
-        channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
+            Console.WriteLine(" [x] Awaiting RPC requests on queue '{0}'", queueName);
+        }
 
-        Console.WriteLine(" [x] Awaiting RPC requests on queue '{0}'", queueName);
+        private void OnReceived(object model, BasicDeliverEventArgs ea) {
+            string response = null;
+            var props = ea.BasicProperties;
+            var replyProps = channel.CreateBasicProperties();
+            replyProps.CorrelationId = props.CorrelationId;
+
+            try {
+                var message = Encoding.UTF8.GetString(ea.Body.ToArray());
+                var request = JsonConvert.DeserializeObject<Request>(message);
+                response = requestHandler.HandleRequest(request.Operation, request.Data);
+            } catch (Exception ex) {
+                Console.WriteLine("Error processing request: " + ex);
+                response = JsonConvert.SerializeObject(new { error = $"Exception: {ex.Message}" });
+            } finally {
+                var responseBytes = Encoding.UTF8.GetBytes(response);
+                channel.BasicPublish(exchange: "", routingKey: props.ReplyTo, basicProperties: replyProps,
+                    body: responseBytes);
+                channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+            }
+        }
+
+        public void Close() {
+            if (channel.IsOpen) {
+                channel.Close();
+            }
+        }
     }
 
-    private void OnReceived(object model, BasicDeliverEventArgs ea)
-    {
-        string response = null;
-        var props = ea.BasicProperties;
-        var replyProps = channel.CreateBasicProperties();
-        replyProps.CorrelationId = props.CorrelationId;
-
-        try
-        {
-            var message = Encoding.UTF8.GetString(ea.Body.ToArray());
-            T requestObject = JsonConvert.DeserializeObject<T>(message);
-            Console.WriteLine("Received a request.");
-
-            // Process the received object and prepare a response
-            response = JsonConvert.SerializeObject(ProcessRequest(requestObject));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(" [.] Exception: {0}", e.Message);
-            response = JsonConvert.SerializeObject(new { error = e.Message });
-        }
-        finally
-        {
-            var responseBytes = Encoding.UTF8.GetBytes(response);
-            channel.BasicPublish(exchange: "", routingKey: props.ReplyTo, basicProperties: replyProps, body: responseBytes);
-            channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
-        }
-    }
-
-    // Example processing method, can be adjusted as needed
-    private T ProcessRequest(T input)
-    {
-        // Mock processing, here you can add logic to modify the object or create a new response object of the same type
-        return input; // Simply returning the input for demonstration
-    }
-
-    public void Close()
-    {
-        channel.Close();
+    public class Request {
+        public Operation Operation { get; set; }
+        public object Data { get; set; }
     }
 }

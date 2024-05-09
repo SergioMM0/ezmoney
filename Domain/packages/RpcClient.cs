@@ -1,20 +1,21 @@
-﻿namespace Domain.packages; 
+﻿using System.Text;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Concurrent;
-using System.Text;
+using System.Threading.Tasks;
 
-class RpcClient
+namespace Domain.packages;
+public class RpcClient
 {
     private readonly IConnection connection;
     private readonly IModel channel;
     private readonly string replyQueueName;
     private readonly EventingBasicConsumer consumer;
-    private readonly BlockingCollection<string> respQueue = new BlockingCollection<string>();
-    private readonly IBasicProperties props;
+    private readonly ConcurrentDictionary<string, TaskCompletionSource<string>> pendingRequests = new ConcurrentDictionary<string, TaskCompletionSource<string>>();
     private readonly string topic;
+    private string consumerTag; 
 
     public RpcClient(string topic)
     {
@@ -33,42 +34,72 @@ class RpcClient
         replyQueueName = channel.QueueDeclare().QueueName;
 
         consumer = new EventingBasicConsumer(channel);
-        props = channel.CreateBasicProperties();
-        var correlationId = Guid.NewGuid().ToString();
-        props.CorrelationId = correlationId;
-        props.ReplyTo = replyQueueName;
+   
+        consumerTag = channel.BasicConsume(
+            consumer: consumer,
+            queue: replyQueueName,
+            autoAck: true
+        );
 
         consumer.Received += (model, ea) =>
         {
-            if (ea.BasicProperties.CorrelationId == correlationId)
+            if (pendingRequests.TryRemove(ea.BasicProperties.CorrelationId, out var tcs))
             {
                 var response = Encoding.UTF8.GetString(ea.Body.ToArray());
-                respQueue.Add(response);
+                tcs.SetResult(response);
+            }
+            else
+            {
+                Console.WriteLine($"Correlation ID mismatch or response too late: {ea.BasicProperties.CorrelationId}");
             }
         };
-
-        channel.BasicConsume(
-            consumer: consumer,
-            queue: replyQueueName,
-            autoAck: true);
     }
 
-    public T Call<T>(object request)
+    public Task<string> CallAsync(Operation operation, object data)
     {
+        var correlationId = Guid.NewGuid().ToString(); 
+        var props = channel.CreateBasicProperties();
+        props.CorrelationId = correlationId;
+        props.ReplyTo = replyQueueName;
+
+        var request = new { Operation = operation, Data = data };
         var message = JsonConvert.SerializeObject(request);
         var messageBytes = Encoding.UTF8.GetBytes(message);
+
+        var tcs = new TaskCompletionSource<string>();
+        pendingRequests[correlationId] = tcs;
+
         channel.BasicPublish(
             exchange: "",
             routingKey: topic,
             basicProperties: props,
             body: messageBytes);
 
-        var response = respQueue.Take(); // Blocks here until a message is added to the collection
-        return JsonConvert.DeserializeObject<T>(response); // Deserialize the JSON back into the object
+        return tcs.Task; 
     }
 
     public void Close()
     {
-        connection.Close();
+        // Cancel the consumer using the stored consumer tag
+        if (channel.IsOpen && consumerTag != null)
+        {
+            channel.BasicCancel(consumerTag);
+        }
+
+        // Clear all pending tasks
+        foreach (var kvp in pendingRequests)
+        {
+            kvp.Value.TrySetCanceled();
+        }
+
+        // Close the channel and connection
+        if (channel.IsOpen)
+        {
+            channel.Close();
+        }
+        if (connection.IsOpen)
+        {
+            connection.Close();
+        }
     }
 }
