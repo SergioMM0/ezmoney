@@ -4,7 +4,10 @@ public enum Operation {
     CreateUser,
     GetAllUsers,
     LoginUser,
-    GetUsers,
+    CreateGroup,
+    GetAllGroups,
+    GetGroupFromUser,
     CreateExpense,
-    CreateGroup
+    GetExpensesFromGroup,
+    GetExpensesFromUser
 }

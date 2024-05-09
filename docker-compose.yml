@@ -53,3 +53,13 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+  group-repo:
+    image: group-repo
+    build:
+      context: .
+      dockerfile: deployable/GroupRepository/Dockerfile
+    ports:
+      - "5000:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy

@@ -68,14 +68,26 @@ public class RpcClient
 
         var tcs = new TaskCompletionSource<string>();
         pendingRequests[correlationId] = tcs;
-
         channel.BasicPublish(
             exchange: "",
             routingKey: topic,
             basicProperties: props,
             body: messageBytes);
+        return tcs.Task.ContinueWith(task =>
+        {
+            if (task.IsFaulted)
+            {
+                throw task.Exception ?? new Exception("Task failed without an exception.");
+            }
 
-        return tcs.Task; 
+            var response = JsonConvert.DeserializeObject<ApiResponse>(task.Result);
+            if (!response.Success)
+            {
+                throw new ApplicationException(response.ErrorMessage);
+            }
+
+            return response.Data;
+        });
     }
 
     public void Close()

@@ -21,19 +21,24 @@ public class UserController : ControllerBase {
     /// <returns>{IActionResult}</returns>
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginUserReq request) {
-        if (!request.PhoneNumber.Equals("")) {
-            try {
-                var response = await _rpcClient.CallAsync(Operation.LoginUser, new User {Name = "", PhoneNumber = request.PhoneNumber });
+        if (!string.IsNullOrEmpty(request.PhoneNumber))
+        {
+            try
+            {
+                var response = await _rpcClient.CallAsync(Operation.LoginUser, new User { Name = "", PhoneNumber = request.PhoneNumber });
                 Console.WriteLine("Received: " + response);
                 _rpcClient.Close();
+                if(response.Contains("null"))
+                    return BadRequest("User not found");
                 return Ok("User Logged successfully");
-            } catch (Exception e) {
-                Console.WriteLine(e);
-                throw;
             }
-            
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return BadRequest("Error logging in: " + e.Message);
+            }
         }
-        return BadRequest("No bueno");
+        return BadRequest("Invalid phone number");
     }
 
     /// <summary>
@@ -48,9 +53,7 @@ public class UserController : ControllerBase {
             Console.WriteLine("Sending a request to create a user...");
             var response = await _rpcClient.CallAsync(Operation.CreateUser, new User { Name = request.Name, PhoneNumber = request.PhoneNumber  });
             Console.WriteLine("Received: " + response);
-            
             _rpcClient.Close();
-            
             return Ok("User created successfully");
         } catch (Exception e) {
             Console.WriteLine(e);
@@ -61,11 +64,16 @@ public class UserController : ControllerBase {
     
     [HttpPost("GetAllUsers")]
     public async Task<IActionResult> GetAllUsers() {
+        try {
+            Console.WriteLine("Sending a request to get all users...");
+            var response = await _rpcClient.CallAsync(Operation.GetAllUsers, null);
+            Console.WriteLine("Received: " + response);
+            _rpcClient.Close();
+            return Ok(response);
+        } catch (Exception e) {
+            Console.WriteLine(e);
+            throw;
+        }
         
-        Console.WriteLine("Sending a request to get all users...");
-        var response = await _rpcClient.CallAsync(Operation.GetAllUsers, null);
-        Console.WriteLine("Received: " + response);
-        _rpcClient.Close();
-        return Ok(response);
     }
 }

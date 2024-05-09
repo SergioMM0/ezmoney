@@ -32,9 +32,7 @@ public class UserRepository : IUserRepository{
 
     public User LoginUser(User user) {
         try {
-            Exception ex = new Exception("test");
-            throw new ApplicationException("", ex);
-            //return _context.UserTable.FirstOrDefault(u => u.PhoneNumber == user.PhoneNumber);
+            return _context.UserTable.FirstOrDefault(u => u.PhoneNumber == user.PhoneNumber);
         } catch (Exception ex) {
             throw new ApplicationException("An error occurred while retrieving the user.", ex);
         }
