@@ -1,4 +1,4 @@
-﻿services:
+services:
   gateway:
     image: gateway
     build:
@@ -31,3 +31,73 @@
       dockerfile: ExpenseService/Dockerfile
     ports:
       - "3000:8080"
+  rabbitmq:
+    user: "999"
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+  mysql-user-db:
+    image: mysql:5.7
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_DATABASE: userdb
+      MYSQL_USER: dbuser
+      MYSQL_PASSWORD: dbuserpassword
+    volumes:
+      - dbdata_user:/var/lib/mysql-user-db
+      #- ./_MySQL_Init_Script:/docker-entrypoint-initdb.d
+    ports:
+      - "3307:3306"
+    restart: always
+  mysql-expense-db:
+    image: mysql:5.7
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_DATABASE: expensedb
+      MYSQL_USER: dbuser
+      MYSQL_PASSWORD: dbuserpassword
+    volumes:
+      - dbdata_expense:/var/lib/mysql-expense-db
+      #- ./_MySQL_Init_Script:/docker-entrypoint-initdb.d
+    ports:
+      - "3308:3306"
+    restart: always
+  mysql-group-db:
+    image: mysql:5.7
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_DATABASE: groupdb
+      MYSQL_USER: dbuser
+      MYSQL_PASSWORD: dbuserpassword
+    volumes:
+      - dbdata_group:/var/lib/mysql-group-db
+      #- ./_MySQL_Init_Script:/docker-entrypoint-initdb.d
+    ports:
+      - "3309:3306"
+    restart: always
+  user-repo:
+    image: user-repo
+    build:
+      context: .
+      dockerfile: UserRepository/Dockerfile
+    ports:
+      - "4000:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - '10000:8080'
+volumes:
+  dbdata_user:
+  dbdata_expense:
+  dbdata_group:
