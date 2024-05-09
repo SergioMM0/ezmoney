@@ -11,17 +11,33 @@ public class UserRepository : IUserRepository{
     }
 
     public User AddUser(User user) {
-         _context.UserTable.Add(user);
-         _context.SaveChanges();
-         return user;
+        try {
+            _context.UserTable.Add(user);
+            _context.SaveChanges();
+            return user;
+        } catch (Exception ex) {
+            throw new ApplicationException("An error occurred while adding the user.", ex);
+        }
+         
     }
 
     public List<User> GetAllUsers() {
-        return _context.UserTable.ToList();
+        try {
+            return _context.UserTable.ToList();
+        } catch (Exception ex) {
+            throw new ApplicationException("An error occurred while adding the user.", ex);
+        }
+        
     }
 
     public User LoginUser(User user) {
-        return _context.UserTable.FirstOrDefault(u => u.PhoneNumber == user.PhoneNumber);
+        try {
+            Exception ex = new Exception("test");
+            throw new ApplicationException("", ex);
+            //return _context.UserTable.FirstOrDefault(u => u.PhoneNumber == user.PhoneNumber);
+        } catch (Exception ex) {
+            throw new ApplicationException("An error occurred while retrieving the user.", ex);
+        }
     }
 
     private void CreateDB() {

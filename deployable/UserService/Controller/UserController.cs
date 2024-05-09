@@ -2,6 +2,7 @@
 using Domain.DTO.User;
 using Domain.packages;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace UserService.Controller;
 
@@ -21,10 +22,16 @@ public class UserController : ControllerBase {
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginUserReq request) {
         if (!request.PhoneNumber.Equals("")) {
-            var response = await _rpcClient.CallAsync(Operation.LoginUser, new User {Name = "", PhoneNumber = request.PhoneNumber });
-            Console.WriteLine("Received: " + response);
-            _rpcClient.Close();
-            return Ok("User Logged successfully");
+            try {
+                var response = await _rpcClient.CallAsync(Operation.LoginUser, new User {Name = "", PhoneNumber = request.PhoneNumber });
+                Console.WriteLine("Received: " + response);
+                _rpcClient.Close();
+                return Ok("User Logged successfully");
+            } catch (Exception e) {
+                Console.WriteLine(e);
+                throw;
+            }
+            
         }
         return BadRequest("No bueno");
     }
@@ -41,7 +48,9 @@ public class UserController : ControllerBase {
             Console.WriteLine("Sending a request to create a user...");
             var response = await _rpcClient.CallAsync(Operation.CreateUser, new User { Name = request.Name, PhoneNumber = request.PhoneNumber  });
             Console.WriteLine("Received: " + response);
+            
             _rpcClient.Close();
+            
             return Ok("User created successfully");
         } catch (Exception e) {
             Console.WriteLine(e);

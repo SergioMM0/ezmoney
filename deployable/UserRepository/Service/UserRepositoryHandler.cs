@@ -37,11 +37,19 @@ public class UserRepositoryHandlers : IRequestHandler
     }
     private string HandleLoginUser(object data)
     {
-        var user = JsonConvert.DeserializeObject<User>(data.ToString());
-        Console.WriteLine($"Logging in user: {user.PhoneNumber}");
-        User userLogin = _userRepositoryService.LoginUser(user);
-       
-        return JsonConvert.SerializeObject(userLogin);
+        try {
+            var user = JsonConvert.DeserializeObject<User>(data.ToString());
+            Console.WriteLine($"Logging in user: {user.PhoneNumber}");
+            User userLogin = _userRepositoryService.LoginUser(user);
+            var response = new ApiResponse {Success = true, Data = JsonConvert.SerializeObject(userLogin)};
+            return JsonConvert.SerializeObject(response);
+        } catch (Exception e) {
+            Console.WriteLine(e);
+            throw;
+        }
+        
+        
+        
     }
     public string ProcessRequest(Operation operation, object data)
     {
