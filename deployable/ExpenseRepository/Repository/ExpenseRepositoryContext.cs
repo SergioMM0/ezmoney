@@ -16,6 +16,6 @@ public class ExpenseRepositoryContext : DbContext {
         modelBuilder.Entity<UserExpense>()
             .HasKey(ue => new {ue.UserId, ue.ExpenseId});
     }
-    DbSet<Expense> ExpenseTable { get; set; }
-    DbSet<UserExpense> UserExpenseTable { get; set; }
+    public DbSet<Expense> ExpenseTable { get; set; }
+    public DbSet<UserExpense> UserExpenseTable { get; set; }
 }

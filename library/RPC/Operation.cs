@@ -9,5 +9,6 @@ public enum Operation {
     GetGroupFromUser,
     CreateExpense,
     GetExpensesFromGroup,
-    GetExpensesFromUser
+    GetExpensesFromUser,
+    GetExpensesFromUserInGroup
 }
