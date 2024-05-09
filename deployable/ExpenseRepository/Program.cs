@@ -1,4 +1,5 @@
 ﻿using ExpenseRepository.Repository;
+using ExpenseRepository.Service;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,12 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ExpenseRepositoryContext>(options =>
     options.UseSqlite("Data source=./db.db"));
+builder.Services.AddScoped<IExpenseRepository, ExpenseRepository.Repository.ExpenseRepository>(); 
+builder.Services.AddScoped<ExpenseRepositoryService>();
+builder.Services.AddScoped<ExpenseRepositoryHandlers>();
+builder.Services.AddHostedService<RpcBackgroundService>();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

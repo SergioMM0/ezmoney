@@ -63,3 +63,13 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+  expense-repo:
+    image: expense-repo
+    build:
+      context: .
+      dockerfile: deployable/ExpenseRepository/Dockerfile
+    ports:
+      - "6000:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy

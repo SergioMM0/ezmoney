@@ -11,7 +11,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<GroupRepositoryContext>(options =>
     options.UseSqlite("Data source=./db.db"));
-builder.Services.AddScoped<IGroupRepository, GroupRepository.Repository.GroupRepository>(); // Assuming UserRepository implements IUserRepository
+builder.Services.AddScoped<IGroupRepository, GroupRepository.Repository.GroupRepository>(); 
 builder.Services.AddScoped<GroupRepositoryService>();
 builder.Services.AddScoped<GroupRepositoryHandlers>();
 builder.Services.AddHostedService<RpcBackgroundService>();
