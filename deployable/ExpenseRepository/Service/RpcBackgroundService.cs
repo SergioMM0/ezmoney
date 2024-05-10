@@ -1,4 +1,5 @@
-﻿using Domain.packages;
+﻿using RPC;
+
 namespace ExpenseRepository.Service;
 
 public class RpcBackgroundService : BackgroundService {

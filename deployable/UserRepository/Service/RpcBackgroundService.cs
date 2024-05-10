@@ -1,4 +1,4 @@
-﻿using Domain.packages;
+﻿using RPC;
 
 namespace UserRepository.Service;
 
