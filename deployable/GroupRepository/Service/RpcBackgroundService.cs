@@ -1,4 +1,6 @@
-﻿using Domain.packages;
+﻿using Messages.RPC;
+using RPC;
+
 namespace GroupRepository.Service;
 
 public class RpcBackgroundService : BackgroundService {

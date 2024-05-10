@@ -1,10 +1,12 @@
 ﻿using System.Text;
+using Domain.packages;
 using Domain.packages.Interfaces;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace Domain.packages; 
+namespace RPC;
+
 public class RpcServer {
     private readonly IModel channel;
     private readonly string queueName;
