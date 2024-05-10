@@ -20,44 +20,41 @@ public class GroupController : ControllerBase {
     }
     */
     private readonly RpcClient _rpcClient;
-    
+
     public GroupController() {
         _rpcClient = new RpcClient("group_queue");
     }
-    
+
     [HttpGet("{userId}/groups")] //group/1/groups
     public async Task<ActionResult<List<GroupResponse>>> GetAllGroupsOfUser([FromRoute] int userId) {
         try {
-            Console.WriteLine("Sending a request to create a user...");
-            var response = await _rpcClient.CallAsync(Operation.GetGroupFromUser, new User { Id  = userId, Name = "", PhoneNumber = ""});
-            Console.WriteLine("Received: " + response);
+            var response = await _rpcClient.CallAsync(Operation.GetGroupFromUser, new User { Id = userId, Name = "", PhoneNumber = "" });
             List<GroupResponse> groups = new List<GroupResponse>();
             groups = JsonConvert.DeserializeObject<List<GroupResponse>>(response);
             _rpcClient.Close();
             return Ok(groups);
         } catch (Exception e) {
             Console.WriteLine(e);
-            return BadRequest("No bueno");
+            return BadRequest("Error getting groups from user");
         }
     }
-    
+
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] PostGroup request) {
+    public async Task<ActionResult<GroupResponse>> Create([FromBody] PostGroup request) {
         try {
-            Console.WriteLine("Sending a request to create a user...");
-            var response = await _rpcClient.CallAsync(Operation.CreateGroup, new GroupDTO { Name = request.Name, UserId  = request.UserId});
-            Console.WriteLine("Received: " + response);
+            var response = await _rpcClient.CallAsync(Operation.CreateGroup, new GroupDTO { Name = request.Name, UserId = request.UserId });
             _rpcClient.Close();
-            return Ok("Group created successfully");
+            GroupResponse group = JsonConvert.DeserializeObject<GroupResponse>(response);
+            return Ok(group);
         } catch (Exception e) {
             Console.WriteLine(e);
-            return BadRequest("No bueno");
+            return BadRequest("Error creating group");
         }
     }
-    
+
     [HttpPost("join")]
     public IActionResult Join([FromBody] JoinGroupReq request) {
-        if(request.Token == 1 && request.UserId == 1) {
+        if (request.Token == 1 && request.UserId == 1) {
             return Ok("User joined group");
         }
         return BadRequest("No bueno, to test this endpoint OK result insert 1 and 1 for both ids");

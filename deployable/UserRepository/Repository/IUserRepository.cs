@@ -1,6 +1,6 @@
 ﻿using Domain;
 
-namespace UserRepository.Repository; 
+namespace UserRepository.Repository;
 
 public interface IUserRepository {
     public Domain.User AddUser(Domain.User user);

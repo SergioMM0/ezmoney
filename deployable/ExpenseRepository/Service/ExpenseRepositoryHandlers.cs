@@ -5,32 +5,31 @@ using Domain.packages;
 using Domain.packages.Interfaces;
 using Newtonsoft.Json;
 
-namespace ExpenseRepository.Service; 
+namespace ExpenseRepository.Service;
 
-public class ExpenseRepositoryHandlers : IRequestHandler{
-    
+public class ExpenseRepositoryHandlers : IRequestHandler {
+
     private HandlerRegistry registry;
 
     private readonly ExpenseRepositoryService _expenseRepositoryService;
-    
-    public ExpenseRepositoryHandlers(ExpenseRepositoryService expenseRepositoryService=null) {
+
+    public ExpenseRepositoryHandlers(ExpenseRepositoryService expenseRepositoryService = null) {
         registry = new HandlerRegistry();
         registry.RegisterHandler(Operation.CreateExpense, HandleCreateExpense);
         registry.RegisterHandler(Operation.GetExpensesFromGroup, HandleGetExpensesFromGroup);
         registry.RegisterHandler(Operation.GetExpensesFromUserInGroup, HandleGetExpensesFromUserInGroup);
         _expenseRepositoryService = expenseRepositoryService;
     }
-    
-    public string ProcessRequest(Operation operation, object data)
-    {
+
+    public string ProcessRequest(Operation operation, object data) {
         return registry.HandleRequest(operation, data);
     }
-    
+
     private string HandleGetExpensesFromUserInGroup(object data) {
         try {
             var expenseDto = JsonConvert.DeserializeObject<ExpenseDTO>(data.ToString());
             List<Expense> expenses = _expenseRepositoryService.GetExpenseFromUserInGroup(expenseDto);
-            var response = new ApiResponse {Success = true, Data = JsonConvert.SerializeObject(expenses)};
+            var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(expenses) };
             return JsonConvert.SerializeObject(response);
         } catch (Exception e) {
             var response = new ApiResponse { Success = false, ErrorMessage = e.Message };
@@ -42,13 +41,13 @@ public class ExpenseRepositoryHandlers : IRequestHandler{
         try {
             var expenseDto = JsonConvert.DeserializeObject<ExpenseDTO>(data.ToString());
             List<Expense> expenses = _expenseRepositoryService.GetExpensesFromGroup(expenseDto);
-            var response = new ApiResponse {Success = true, Data = JsonConvert.SerializeObject(expenses)};
+            var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(expenses) };
             return JsonConvert.SerializeObject(response);
         } catch (Exception e) {
             var response = new ApiResponse { Success = false, ErrorMessage = e.Message };
             return JsonConvert.SerializeObject(response);
         }
-        
+
     }
 
     private string HandleCreateExpense(object data) {
@@ -56,7 +55,7 @@ public class ExpenseRepositoryHandlers : IRequestHandler{
             Console.WriteLine("Creating expense from data: {0}", data.ToString());
             var expense = JsonConvert.DeserializeObject<PostExpense>(data.ToString());
             Expense expenseAdded = _expenseRepositoryService.AddExpense(expense);
-            var response = new ApiResponse {Success = true, Data = JsonConvert.SerializeObject(expenseAdded)};
+            var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(expenseAdded) };
             return JsonConvert.SerializeObject(response);
         } catch (Exception e) {
             var response = new ApiResponse { Success = false, ErrorMessage = e.Message };

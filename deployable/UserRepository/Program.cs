@@ -1,7 +1,4 @@
-﻿using Domain;
-using Domain.packages;
-using Domain.packages.Interfaces;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using UserRepository.Repository;
 using UserRepository.Service;
 
@@ -15,7 +12,7 @@ builder.Services.AddSwaggerGen();
 //     options.UseMySql(builder.Configuration.GetConnectionString("UserDbConnectionString"), new MySqlServerVersion(new Version(5, 7))));
 builder.Services.AddDbContext<UserRepositoryContext>(options =>
     options.UseSqlite("Data source=./db.db"));
-builder.Services.AddScoped<IUserRepository, UserRepository.Repository.UserRepository>(); 
+builder.Services.AddScoped<IUserRepository, UserRepository.Repository.UserRepository>();
 builder.Services.AddScoped<UserRepositoryService>();
 builder.Services.AddScoped<UserRepositoryHandlers>();
 builder.Services.AddHostedService<RpcBackgroundService>();

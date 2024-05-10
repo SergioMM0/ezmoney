@@ -8,6 +8,6 @@ public class GatewayController : ControllerBase {
     //Health check
     [HttpGet]
     public IActionResult Ping() {
-        return Ok("Pong"); 
+        return Ok("Pong");
     }
 }

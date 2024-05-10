@@ -21,19 +21,15 @@ public class UserController : ControllerBase {
     /// <returns>{IActionResult}</returns>
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginUserReq request) {
-        if (!string.IsNullOrEmpty(request.PhoneNumber))
-        {
-            try
-            {
+        if (!string.IsNullOrEmpty(request.PhoneNumber)) {
+            try {
                 var response = await _rpcClient.CallAsync(Operation.LoginUser, new User { Name = "", PhoneNumber = request.PhoneNumber });
                 Console.WriteLine("Received: " + response);
                 _rpcClient.Close();
-                if(response.Contains("null"))
+                if (response.Contains("null"))
                     return BadRequest("User not found");
                 return Ok("User Logged successfully");
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Console.WriteLine(e);
                 return BadRequest("Error logging in: " + e.Message);
             }
@@ -50,30 +46,29 @@ public class UserController : ControllerBase {
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterUserReq request) {
         try {
-            Console.WriteLine("Sending a request to create a user...");
-            var response = await _rpcClient.CallAsync(Operation.CreateUser, new User { Name = request.Name, PhoneNumber = request.PhoneNumber  });
-            Console.WriteLine("Received: " + response);
+            var response = await _rpcClient.CallAsync(Operation.CreateUser, new User { Name = request.Name, PhoneNumber = request.PhoneNumber });
+            UserResponse user = JsonConvert.DeserializeObject<UserResponse>(response);
             _rpcClient.Close();
-            return Ok("User created successfully");
+            return Ok(user);
         } catch (Exception e) {
             Console.WriteLine(e);
-            return BadRequest("No bueno");
+            return BadRequest("Error registering user");
         }
-        
+
     }
-    
+
     [HttpPost("GetAllUsers")]
-    public async Task<IActionResult> GetAllUsers() {
+    public async Task<ActionResult<List<UserResponse>>> GetAllUsers() {
         try {
-            Console.WriteLine("Sending a request to get all users...");
             var response = await _rpcClient.CallAsync(Operation.GetAllUsers, null);
-            Console.WriteLine("Received: " + response);
+            List<UserResponse> users = new List<UserResponse>();
+            users = JsonConvert.DeserializeObject<List<UserResponse>>(response);
             _rpcClient.Close();
-            return Ok(response);
+            return Ok(users);
         } catch (Exception e) {
             Console.WriteLine(e);
-            throw;
+            return BadRequest("Error getting users");
         }
-        
+
     }
 }

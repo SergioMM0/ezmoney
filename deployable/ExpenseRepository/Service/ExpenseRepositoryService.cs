@@ -3,11 +3,11 @@ using Domain.DTO.Expense;
 using Domain.DTO.Group;
 using ExpenseRepository.Repository;
 
-namespace ExpenseRepository.Service; 
+namespace ExpenseRepository.Service;
 
 public class ExpenseRepositoryService {
     private readonly IExpenseRepository _expenseRepository;
-    
+
     public ExpenseRepositoryService(IExpenseRepository expenseRepository) {
         _expenseRepository = expenseRepository;
     }

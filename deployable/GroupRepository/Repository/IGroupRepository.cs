@@ -1,8 +1,7 @@
 ﻿using Domain;
 using Domain.DTO.Group;
-using GroupRepository.Service;
 
-namespace GroupRepository.Repository; 
+namespace GroupRepository.Repository;
 
 public interface IGroupRepository {
     public List<Group> GetGroupsFromUser(User user);
