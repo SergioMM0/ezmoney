@@ -8,11 +8,11 @@ public class RpcFactory : IConnectionFactoryProvider
     {
         return new ConnectionFactory
         {
-            HostName = "rabbitmq",
-            Port = 5672,
-            VirtualHost = "/",
-            UserName = "guest",
-            Password = "guest"
+            HostName = Environment.GetEnvironmentVariable("RABBITMQ_HOSTNAME"),
+            Port = Convert.ToInt32(Environment.GetEnvironmentVariable("RABBITMQ_PORT") ),
+            VirtualHost = Environment.GetEnvironmentVariable("RABBITMQ_VIRTUALHOST"),
+            UserName = Environment.GetEnvironmentVariable("RABBITMQ_USERNAME"),
+            Password = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD")
         };
     }
 }
