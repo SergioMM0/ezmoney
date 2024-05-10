@@ -1,10 +1,10 @@
 ﻿using Domain;
 
-namespace UserRepository.Repository; 
+namespace UserRepository.Repository;
 
-public class UserRepository : IUserRepository{
+public class UserRepository : IUserRepository {
     private readonly UserRepositoryContext _context;
-    
+
     public UserRepository(UserRepositoryContext context) {
         _context = context;
         CreateDB();
@@ -18,7 +18,7 @@ public class UserRepository : IUserRepository{
         } catch (Exception ex) {
             throw new ApplicationException("An error occurred while adding the user.", ex);
         }
-         
+
     }
 
     public List<User> GetAllUsers() {
@@ -27,7 +27,7 @@ public class UserRepository : IUserRepository{
         } catch (Exception ex) {
             throw new ApplicationException("An error occurred while adding the user.", ex);
         }
-        
+
     }
 
     public User LoginUser(User user) {

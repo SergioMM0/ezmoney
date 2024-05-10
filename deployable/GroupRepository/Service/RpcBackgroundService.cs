@@ -1,22 +1,17 @@
 ﻿using Domain.packages;
-namespace GroupRepository.Service; 
+namespace GroupRepository.Service;
 
-public class RpcBackgroundService : BackgroundService
-{
+public class RpcBackgroundService : BackgroundService {
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public RpcBackgroundService(IServiceScopeFactory scopeFactory)
-    {
+    public RpcBackgroundService(IServiceScopeFactory scopeFactory) {
         _scopeFactory = scopeFactory;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        using (var scope = _scopeFactory.CreateScope())
-        {
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
+        using (var scope = _scopeFactory.CreateScope()) {
             var groupServiceHandler = scope.ServiceProvider.GetRequiredService<GroupRepositoryHandlers>();
             var rpcServer = new RpcServer("group_queue", groupServiceHandler);
-            // Keep rpcServer running, wait for stoppingToken to trigger shutdown
             stoppingToken.WaitHandle.WaitOne();
             rpcServer.Close();
         }

@@ -1,4 +1,4 @@
-﻿namespace Domain.DTO.Group; 
+﻿namespace Domain.DTO.Group;
 
 /// <summary>
 /// Class for creation of the expense associated to the group via the messaging system,

@@ -1,6 +1,5 @@
-﻿namespace Domain.packages.Interfaces; 
+﻿namespace Domain.packages.Interfaces;
 
-public interface IRequestHandler
-{
+public interface IRequestHandler {
     string HandleRequest(Operation operation, object data);
 }

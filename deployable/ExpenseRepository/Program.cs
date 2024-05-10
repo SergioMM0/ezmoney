@@ -11,7 +11,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ExpenseRepositoryContext>(options =>
     options.UseSqlite("Data source=./db.db"));
-builder.Services.AddScoped<IExpenseRepository, ExpenseRepository.Repository.ExpenseRepository>(); 
+builder.Services.AddScoped<IExpenseRepository, ExpenseRepository.Repository.ExpenseRepository>();
 builder.Services.AddScoped<ExpenseRepositoryService>();
 builder.Services.AddScoped<ExpenseRepositoryHandlers>();
 builder.Services.AddHostedService<RpcBackgroundService>();

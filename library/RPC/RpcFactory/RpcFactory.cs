@@ -1,6 +1,4 @@
-﻿using Domain.packages.Interfaces;
-
-namespace Domain.packages.RpcFactory; 
+﻿namespace Domain.packages.RpcFactory;
 
 public class RpcFactory {
     // public static RpcServer CreateRpcUserCreationServer(UserRepositoryHandler handler) {

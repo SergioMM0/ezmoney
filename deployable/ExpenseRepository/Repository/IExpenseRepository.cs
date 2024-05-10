@@ -2,7 +2,7 @@
 using Domain.DTO.Expense;
 using Domain.DTO.Group;
 
-namespace ExpenseRepository.Repository; 
+namespace ExpenseRepository.Repository;
 
 public interface IExpenseRepository {
     public List<Expense> GetExpenseFromUserInGroup(ExpenseDTO expenseDto);

@@ -1,4 +1,4 @@
-﻿namespace Domain.DTO.Group; 
+﻿namespace Domain.DTO.Group;
 
 
 /// <summary>

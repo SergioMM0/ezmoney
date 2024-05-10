@@ -1,4 +1,4 @@
-﻿namespace Domain.packages; 
+﻿namespace Domain.packages;
 
 public enum Operation {
     CreateUser,

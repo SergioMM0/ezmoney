@@ -2,11 +2,11 @@
 using Domain.DTO.Group;
 using GroupRepository.Repository;
 
-namespace GroupRepository.Service; 
+namespace GroupRepository.Service;
 
 public class GroupRepositoryService {
     private readonly IGroupRepository _groupRepository;
-    
+
     public GroupRepositoryService(IGroupRepository groupRepository) {
         _groupRepository = groupRepository;
     }
