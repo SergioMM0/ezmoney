@@ -4,7 +4,7 @@ namespace UserRepository.Repository;
 
 public class UserRepository : IUserRepository {
     private readonly UserRepositoryContext _context;
-    
+
     public UserRepository(UserRepositoryContext context) {
         _context = context;
         CreateDB();
