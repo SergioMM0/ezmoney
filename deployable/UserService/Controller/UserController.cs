@@ -10,8 +10,8 @@ namespace UserService.Controller;
 [Route("user")]
 public class UserController : ControllerBase {
     private readonly RpcClient _rpcClient;
-    public UserController() {
-        _rpcClient = new RpcClient("user_queue");
+    public UserController(RpcClient rpcClient) {
+        _rpcClient = rpcClient;
     }
     /// <summary>
     /// Attempts to log in a user, returning a 200 OK if successful, 400 Bad Request if not
@@ -20,15 +20,15 @@ public class UserController : ControllerBase {
     /// <param name="request"></param>
     /// <returns>{IActionResult}</returns>
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginUserReq request) {
+    public async Task<ActionResult<UserResponse>> Login([FromBody] LoginUserReq request) {
         if (!string.IsNullOrEmpty(request.PhoneNumber)) {
             try {
-                var response = await _rpcClient.CallAsync(Operation.LoginUser, new User { Name = "", PhoneNumber = request.PhoneNumber });
-                Console.WriteLine("Received: " + response);
-                _rpcClient.Close();
+                var response = await _rpcClient.CallAsync(Operation.LoginUser,
+                    new User { Name = "", PhoneNumber = request.PhoneNumber });
                 if (response.Contains("null"))
                     return BadRequest("User not found");
-                return Ok("User Logged successfully");
+                UserResponse user = JsonConvert.DeserializeObject<UserResponse>(response);
+                return Ok(user);
             } catch (Exception e) {
                 Console.WriteLine(e);
                 return BadRequest("Error logging in: " + e.Message);
@@ -48,7 +48,6 @@ public class UserController : ControllerBase {
         try {
             var response = await _rpcClient.CallAsync(Operation.CreateUser, new User { Name = request.Name, PhoneNumber = request.PhoneNumber });
             UserResponse user = JsonConvert.DeserializeObject<UserResponse>(response);
-            _rpcClient.Close();
             return Ok(user);
         } catch (Exception e) {
             Console.WriteLine(e);
@@ -63,7 +62,6 @@ public class UserController : ControllerBase {
             var response = await _rpcClient.CallAsync(Operation.GetAllUsers, null);
             List<UserResponse> users = new List<UserResponse>();
             users = JsonConvert.DeserializeObject<List<UserResponse>>(response);
-            _rpcClient.Close();
             return Ok(users);
         } catch (Exception e) {
             Console.WriteLine(e);

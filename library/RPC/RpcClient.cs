@@ -1,27 +1,25 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Text;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Threading.Tasks;
+using RPC.RpcFactory;
 
 namespace Domain.packages;
-public class RpcClient {
+public class RpcClient : IDisposable {
     private readonly IConnection connection;
     private readonly IModel channel;
     private readonly string replyQueueName;
     private readonly EventingBasicConsumer consumer;
     private readonly ConcurrentDictionary<string, TaskCompletionSource<string>> pendingRequests = new ConcurrentDictionary<string, TaskCompletionSource<string>>();
     private readonly string topic;
-    private string consumerTag;
+    private bool disposed = false;
 
-    public RpcClient(string topic) {
-        var factory = new ConnectionFactory() {
-            HostName = "rabbitmq",
-            Port = 5672,
-            VirtualHost = "/",
-            UserName = "guest",
-            Password = "guest"
-        };
+    public RpcClient(string topic, IConnectionFactoryProvider factoryProvider) {
+        var factory = factoryProvider.GetConnectionFactory();
+        
         this.topic = topic;
 
         connection = factory.CreateConnection();
@@ -30,8 +28,7 @@ public class RpcClient {
         replyQueueName = channel.QueueDeclare().QueueName;
 
         consumer = new EventingBasicConsumer(channel);
-
-        consumerTag = channel.BasicConsume(
+        channel.BasicConsume(
             consumer: consumer,
             queue: replyQueueName,
             autoAck: true
@@ -64,6 +61,7 @@ public class RpcClient {
             routingKey: topic,
             basicProperties: props,
             body: messageBytes);
+
         return tcs.Task.ContinueWith(task => {
             if (task.IsFaulted) {
                 throw task.Exception ?? new Exception("Task failed without an exception.");
@@ -78,23 +76,15 @@ public class RpcClient {
         });
     }
 
-    public void Close() {
-        // Cancel the consumer using the stored consumer tag
-        if (channel.IsOpen && consumerTag != null) {
-            channel.BasicCancel(consumerTag);
-        }
-
-        // Clear all pending tasks
-        foreach (var kvp in pendingRequests) {
-            kvp.Value.TrySetCanceled();
-        }
-
-        // Close the channel and connection
-        if (channel.IsOpen) {
-            channel.Close();
-        }
-        if (connection.IsOpen) {
-            connection.Close();
+    public void Dispose() {
+        if (!disposed) {
+            if (channel.IsOpen) {
+                channel.Close();
+            }
+            if (connection.IsOpen) {
+                connection.Close();
+            }
+            disposed = true;
         }
     }
 }

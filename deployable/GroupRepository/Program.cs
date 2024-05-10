@@ -1,8 +1,11 @@
-﻿using GroupRepository.Repository;
+﻿using Domain.packages;
+using GroupRepository.Repository;
 using GroupRepository.Service;
 using Messages.RPC;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using RPC.RpcFactory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +18,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.Configure<Topics>(builder.Configuration.GetSection("RPCMessages"));
 builder.Services.AddSingleton<Topics>(sp =>
     sp.GetRequiredService<IOptions<Topics>>().Value);
-
+builder.Services.AddSingleton<IConnectionFactoryProvider, RpcFactory>();
 builder.Services.AddDbContext<GroupRepositoryContext>(options =>
     options.UseSqlite("Data source=./db.db"));
 builder.Services.AddScoped<IGroupRepository, GroupRepository.Repository.GroupRepository>();

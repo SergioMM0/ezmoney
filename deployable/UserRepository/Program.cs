@@ -1,6 +1,8 @@
-﻿using Messages.RPC;
+﻿using Domain.packages;
+using Messages.RPC;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using RPC.RpcFactory;
 using UserRepository.Repository;
 using UserRepository.Service;
 
@@ -14,7 +16,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.Configure<Topics>(builder.Configuration.GetSection("RPCMessages"));
 builder.Services.AddSingleton<Topics>(sp =>
     sp.GetRequiredService<IOptions<Topics>>().Value);
-
+builder.Services.AddSingleton<IConnectionFactoryProvider, RpcFactory>();
 // builder.Services.AddDbContext<UserRepositoryContext>(options =>
 //     options.UseMySql(builder.Configuration.GetConnectionString("UserDbConnectionString"), new MySqlServerVersion(new Version(5, 7))));
 builder.Services.AddDbContext<UserRepositoryContext>(options =>
