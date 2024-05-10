@@ -21,8 +21,8 @@ public class GroupController : ControllerBase {
     */
     private readonly RpcClient _rpcClient;
 
-    public GroupController() {
-        _rpcClient = new RpcClient("group_queue");
+    public GroupController(RpcClient rpcClient) {
+        _rpcClient = rpcClient;
     }
 
     [HttpGet("{userId}/groups")] //group/1/groups
@@ -31,7 +31,6 @@ public class GroupController : ControllerBase {
             var response = await _rpcClient.CallAsync(Operation.GetGroupFromUser, new User { Id = userId, Name = "", PhoneNumber = "" });
             List<GroupResponse> groups = new List<GroupResponse>();
             groups = JsonConvert.DeserializeObject<List<GroupResponse>>(response);
-            _rpcClient.Close();
             return Ok(groups);
         } catch (Exception e) {
             Console.WriteLine(e);
@@ -43,7 +42,6 @@ public class GroupController : ControllerBase {
     public async Task<ActionResult<GroupResponse>> Create([FromBody] PostGroup request) {
         try {
             var response = await _rpcClient.CallAsync(Operation.CreateGroup, new GroupDTO { Name = request.Name, UserId = request.UserId });
-            _rpcClient.Close();
             GroupResponse group = JsonConvert.DeserializeObject<GroupResponse>(response);
             return Ok(group);
         } catch (Exception e) {

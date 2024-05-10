@@ -1,11 +1,18 @@
-﻿namespace Domain.packages.RpcFactory;
+﻿using RabbitMQ.Client;
 
-public class RpcFactory {
-    // public static RpcServer CreateRpcUserCreationServer(UserRepositoryHandler handler) {
-    //     
-    //     return new RpcServer("user_creation", handler);
-    // }
-    // public static RpcServer CreateRpcUserRetrievalServer() {
-    //     return new RpcServer("user_retrieval");
-    // }
+namespace RPC.RpcFactory; 
+
+public class RpcFactory : IConnectionFactoryProvider
+{
+    public ConnectionFactory GetConnectionFactory()
+    {
+        return new ConnectionFactory
+        {
+            HostName = "rabbitmq",
+            Port = 5672,
+            VirtualHost = "/",
+            UserName = "guest",
+            Password = "guest"
+        };
+    }
 }

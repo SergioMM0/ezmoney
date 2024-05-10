@@ -12,8 +12,8 @@ public class ExpenseController : ControllerBase {
 
     private readonly RpcClient _rpcClient;
 
-    public ExpenseController() {
-        _rpcClient = new RpcClient("expense_queue");
+    public ExpenseController(RpcClient rpcClient) {
+        _rpcClient = rpcClient;
     }
 
     [HttpPost("GetExpensesFromUserInGroup")]
@@ -22,7 +22,6 @@ public class ExpenseController : ControllerBase {
             var response = await _rpcClient.CallAsync(Operation.GetExpensesFromUserInGroup, new ExpenseDTO() { UserId = request.UserId, GroupId = request.GroupId });
             List<ExpenseResponse> expenses = new List<ExpenseResponse>();
             expenses = JsonConvert.DeserializeObject<List<ExpenseResponse>>(response);
-            _rpcClient.Close();
             return Ok(expenses);
         } catch (Exception e) {
             Console.WriteLine(e);
@@ -33,8 +32,8 @@ public class ExpenseController : ControllerBase {
     [HttpGet("{groupId}/expenses")]
     public async Task<ActionResult<List<ExpenseResponse>>> AllExpensesFromGroup([FromRoute] int groupId) {
         try {
-            var response = await _rpcClient.CallAsync(Operation.GetExpensesFromGroup, new ExpenseDTO() { GroupId = groupId, UserId = 0 });
-            _rpcClient.Close();
+            var response = await _rpcClient.CallAsync(Operation.GetExpensesFromGroup,
+                new ExpenseDTO() { GroupId = groupId, UserId = 0 });
             List<ExpenseResponse> expenses = new List<ExpenseResponse>();
             expenses = JsonConvert.DeserializeObject<List<ExpenseResponse>>(response);
             return Ok(expenses);
@@ -48,7 +47,6 @@ public class ExpenseController : ControllerBase {
     public async Task<ActionResult<ExpenseResponse>> Create([FromBody] PostExpense request) {
         try {
             var response = await _rpcClient.CallAsync(Operation.CreateExpense, new PostExpense { Amount = request.Amount, Description = request.Description, GroupId = request.GroupId, OwnerId = request.OwnerId, Participants = request.Participants, Date = DateTime.Now });
-            _rpcClient.Close();
             ExpenseResponse expense = JsonConvert.DeserializeObject<ExpenseResponse>(response);
             return Ok(expense);
         } catch (Exception e) {

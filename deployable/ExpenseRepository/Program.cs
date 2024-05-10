@@ -1,6 +1,10 @@
-﻿using ExpenseRepository.Repository;
+﻿using Domain.packages;
+using ExpenseRepository.Repository;
 using ExpenseRepository.Service;
+using Messages.RPC;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using RPC.RpcFactory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,7 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+// Configure topics
+builder.Services.Configure<Topics>(builder.Configuration.GetSection("RPCMessages"));
+builder.Services.AddSingleton<Topics>(sp =>
+    sp.GetRequiredService<IOptions<Topics>>().Value);
+builder.Services.AddSingleton<IConnectionFactoryProvider, RpcFactory>();
 builder.Services.AddDbContext<ExpenseRepositoryContext>(options =>
     options.UseSqlite("Data source=./db.db"));
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository.Repository.ExpenseRepository>();
@@ -27,26 +35,7 @@ if (app.Environment.IsDevelopment()) {
 
 app.UseHttpsRedirection();
 
-var summaries = new[] {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () => {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-            new WeatherForecast
-            (
-                DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                Random.Shared.Next(-20, 55),
-                summaries[Random.Shared.Next(summaries.Length)]
-            ))
-        .ToArray();
-    return forecast;
-})
-    .WithName("GetWeatherForecast")
-    .WithOpenApi();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary) {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+
