@@ -3,7 +3,7 @@ services:
     image: gateway
     build:
       context: .
-      dockerfile: Gateway/Dockerfile
+      dockerfile: deployable/Gateway/Dockerfile
     ports:
       - "8080:8080"
     depends_on:
@@ -14,21 +14,21 @@ services:
     image: user-service
     build:
       context: .
-      dockerfile: UserService/Dockerfile
+      dockerfile: deployable/UserService/Dockerfile
     ports:
       - "1000:8080"
   group-service:
     image: group-service
     build:
       context: .
-      dockerfile: GroupService/Dockerfile
+      dockerfile: deployable/GroupService/Dockerfile
     ports:
       - "2000:8080"
   expense-service:
     image: expense-service
     build:
       context: .
-      dockerfile: ExpenseService/Dockerfile
+      dockerfile: deployable/ExpenseService/Dockerfile
     ports:
       - "3000:8080"
   rabbitmq:
@@ -47,9 +47,29 @@ services:
     image: user-repo
     build:
       context: .
-      dockerfile: UserRepository/Dockerfile
+      dockerfile: deployable/UserRepository/Dockerfile
     ports:
       - "4000:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  group-repo:
+    image: group-repo
+    build:
+      context: .
+      dockerfile: deployable/GroupRepository/Dockerfile
+    ports:
+      - "5000:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  expense-repo:
+    image: expense-repo
+    build:
+      context: .
+      dockerfile: deployable/ExpenseRepository/Dockerfile
+    ports:
+      - "6000:8080"
     depends_on:
       rabbitmq:
         condition: service_healthy
