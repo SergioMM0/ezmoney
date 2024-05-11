@@ -1,4 +1,4 @@
-﻿namespace Domain.DTO.Group;
+﻿namespace Messages.Group;
 
 /// <summary>
 /// Response object for a group

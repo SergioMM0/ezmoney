@@ -1,6 +1,7 @@
 ﻿using Domain;
 using Domain.DTO.Group;
 using Domain.packages;
+using Messages.Group;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -29,8 +30,7 @@ public class GroupController : ControllerBase {
     public async Task<ActionResult<List<GroupResponse>>> GetAllGroupsOfUser([FromRoute] int userId) {
         try {
             var response = await _rpcClient.CallAsync(Operation.GetGroupFromUser, new User { Id = userId, Name = "", PhoneNumber = "" });
-            List<GroupResponse> groups = new List<GroupResponse>();
-            groups = JsonConvert.DeserializeObject<List<GroupResponse>>(response);
+            var groups = JsonConvert.DeserializeObject<List<GroupResponse>>(response);
             return Ok(groups);
         } catch (Exception e) {
             Console.WriteLine(e);
@@ -42,7 +42,7 @@ public class GroupController : ControllerBase {
     public async Task<ActionResult<GroupResponse>> Create([FromBody] PostGroup request) {
         try {
             var response = await _rpcClient.CallAsync(Operation.CreateGroup, new GroupDTO { Name = request.Name, UserId = request.UserId });
-            GroupResponse group = JsonConvert.DeserializeObject<GroupResponse>(response);
+            var group = JsonConvert.DeserializeObject<GroupResponse>(response);
             return Ok(group);
         } catch (Exception e) {
             Console.WriteLine(e);
