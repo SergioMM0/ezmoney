@@ -13,9 +13,9 @@ namespace RPC;
 // RpcServer class implements IDisposable to manage resource cleanup properly
 public class RpcServer : IDisposable {
     // Channel for communication with the RabbitMQ broker
-    private readonly IModel channel;
+    private readonly IModel _channel;
     // The name of the queue "topic" to listen for RPC requests
-    private readonly string queueName;
+    private readonly string _queueName;
 
     // Handler that processes incoming requests and returns responses:
     // This 'IRequestHandler' is an interface that abstracts the processing of various types of operations received through RPC calls.
@@ -30,25 +30,25 @@ public class RpcServer : IDisposable {
     // based on the operation type. This setup not only decouples the server's request routing logic from the business logic but also
     // simplifies maintenance and scalability of the system by segregating responsibilities.
 
-    private readonly IRequestHandler requestHandler;
+    private readonly IRequestHandler _requestHandler;
     // Connection to the RabbitMQ broker
-    private readonly IConnection connection;
+    private readonly IConnection _connection;
     // Flag to track if the object has been disposed
-    private bool disposed = false;
+    private bool _disposed = false;
 
 
     public RpcServer(string topic, IRequestHandler handler, IConnectionFactoryProvider factoryProvider) {
         // Obtain a connection factory from the provided factory provider
         var factory = factoryProvider.GetConnectionFactory();
         // Create connection and channel using the factory
-        connection = factory.CreateConnection();
-        channel = connection.CreateModel();
+        _connection = factory.CreateConnection();
+        _channel = _connection.CreateModel();
         // Set the queue name based on the topic and declare the queue
-        queueName = topic;
-        requestHandler = handler;
+        _queueName = topic;
+        _requestHandler = handler;
         // Set quality of service settings for the channel
-        channel.QueueDeclare(queue: queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-        channel.BasicQos(0, 1, false);
+        _channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+        _channel.BasicQos(0, 1, false);
         // Create a consumer that triggers an event when messages are received:
         // The 'EventingBasicConsumer' is a type of consumer provided by RabbitMQ's client library that uses event-driven logic to handle messages.
         // Unlike other types of consumers which might involve continuous polling or other more resource-intensive patterns, the EventingBasicConsumer
@@ -70,11 +70,11 @@ public class RpcServer : IDisposable {
         // This configuration is important in a server handling potentially multiple or complex requests where operations may not be idempotent,
         // and careful control over message acknowledgment is required to maintain consistency and reliability of the system.
 
-        var consumer = new EventingBasicConsumer(channel);
+        var consumer = new EventingBasicConsumer(_channel);
         consumer.Received += OnReceived;
-        channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
+        _channel.BasicConsume(queue: _queueName, autoAck: false, consumer: consumer);
 
-        Console.WriteLine(" [x] Awaiting RPC requests on queue '{0}'", queueName);
+        Console.WriteLine(" [x] Awaiting RPC requests on queue '{0}'", _queueName);
     }
 
     // Event handler that processes messages when they are received
@@ -84,7 +84,7 @@ public class RpcServer : IDisposable {
         // Extract the basic properties and create reply properties
         var props = ea.BasicProperties;
         // Create reply properties with the correlation ID
-        var replyProps = channel.CreateBasicProperties();
+        var replyProps = _channel.CreateBasicProperties();
         replyProps.CorrelationId = props.CorrelationId;
         // Try to process the request and handle any exceptions
         try {
@@ -95,7 +95,7 @@ public class RpcServer : IDisposable {
             // The request handler processes the request based on the operation type and returns a response
             // The response is then serialized back to JSON format
             // Each Repository Service has its own concretization of IRequestHandler, which contains the logic to handle different operations
-            response = requestHandler.HandleRequest(request.Operation, request.Data);
+            response = _requestHandler.HandleRequest(request.Operation, request.Data);
         } catch (Exception ex) {
             // Log and serialize error information
             Console.WriteLine("Error processing request: " + ex);
@@ -103,9 +103,9 @@ public class RpcServer : IDisposable {
         } finally {
             // Send the response back to the reply-to address using the correlation ID
             var responseBytes = Encoding.UTF8.GetBytes(response);
-            channel.BasicPublish(exchange: "", routingKey: props.ReplyTo, basicProperties: replyProps, body: responseBytes);
+            _channel.BasicPublish(exchange: "", routingKey: props.ReplyTo, basicProperties: replyProps, body: responseBytes);
             // Acknowledge that the message has been processed thus ending the message processing
-            channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+            _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
         }
     }
     // Dispose method to clean up resources
@@ -116,14 +116,14 @@ public class RpcServer : IDisposable {
     }
 
     protected virtual void Dispose(bool disposing) {
-        if (!disposed) {
+        if (!_disposed) {
             if (disposing) {
-                if (channel.IsOpen) {
-                    channel.Close();
+                if (_channel.IsOpen) {
+                    _channel.Close();
                 }
-                connection.Close();
+                _connection.Close();
             }
-            disposed = true;
+            _disposed = true;
         }
     }
 }
