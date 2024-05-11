@@ -1,9 +1,10 @@
 ﻿using Domain;
-using Domain.DTO.Expense;
 using Domain.DTO.Group;
 using Domain.packages;
 using Domain.packages.Interfaces;
+using Messages.Expense;
 using Newtonsoft.Json;
+using RPC;
 
 namespace ExpenseRepository.Service;
 
@@ -27,7 +28,7 @@ public class ExpenseRepositoryHandlers : IRequestHandler {
 
     private string HandleGetExpensesFromUserInGroup(object data) {
         try {
-            var expenseDto = JsonConvert.DeserializeObject<ExpenseDTO>(data.ToString());
+            var expenseDto = JsonConvert.DeserializeObject<ExpenseDto>(data.ToString());
             List<Expense> expenses = _expenseRepositoryService.GetExpenseFromUserInGroup(expenseDto);
             var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(expenses) };
             return JsonConvert.SerializeObject(response);
@@ -39,7 +40,7 @@ public class ExpenseRepositoryHandlers : IRequestHandler {
 
     private string HandleGetExpensesFromGroup(object data) {
         try {
-            var expenseDto = JsonConvert.DeserializeObject<ExpenseDTO>(data.ToString());
+            var expenseDto = JsonConvert.DeserializeObject<ExpenseDto>(data.ToString());
             List<Expense> expenses = _expenseRepositoryService.GetExpensesFromGroup(expenseDto);
             var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(expenses) };
             return JsonConvert.SerializeObject(response);

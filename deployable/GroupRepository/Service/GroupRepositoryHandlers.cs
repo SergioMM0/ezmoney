@@ -2,7 +2,9 @@
 using Domain.DTO.Group;
 using Domain.packages;
 using Domain.packages.Interfaces;
+using Messages.Group;
 using Newtonsoft.Json;
+using RPC;
 
 namespace GroupRepository.Service;
 
@@ -49,7 +51,7 @@ public class GroupRepositoryHandlers : IRequestHandler {
 
     private string HandleCreateGroup(object data) {
         try {
-            var groupDTO = JsonConvert.DeserializeObject<GroupDTO>(data.ToString());
+            var groupDTO = JsonConvert.DeserializeObject<GroupDto>(data.ToString());
             Group groupAdded = _groupRepositoryService.AddGroup(groupDTO);
             var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(groupAdded) };
             return JsonConvert.SerializeObject(response);

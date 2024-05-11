@@ -2,6 +2,7 @@
 using Domain.packages;
 using Domain.packages.Interfaces;
 using Newtonsoft.Json;
+using RPC;
 
 namespace UserRepository.Service;
 

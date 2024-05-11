@@ -1,4 +1,4 @@
-namespace Domain.packages;
+namespace RPC;
 
 public class ApiResponse {
     public bool Success { get; set; }

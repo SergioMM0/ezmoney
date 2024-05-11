@@ -1,6 +1,4 @@
-﻿using System;
-using System.Text;
-using Domain.packages;
+﻿using System.Text;
 using Domain.packages.Interfaces;
 using Newtonsoft.Json;
 using RabbitMQ.Client;

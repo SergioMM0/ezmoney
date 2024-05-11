@@ -4,6 +4,7 @@ using Domain.packages;
 using Messages.Group;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using RPC;
 
 namespace GroupService.Controller;
 
@@ -41,7 +42,7 @@ public class GroupController : ControllerBase {
     [HttpPost]
     public async Task<ActionResult<GroupResponse>> Create([FromBody] PostGroup request) {
         try {
-            var response = await _rpcClient.CallAsync(Operation.CreateGroup, new GroupDTO { Name = request.Name, UserId = request.UserId });
+            var response = await _rpcClient.CallAsync(Operation.CreateGroup, new GroupDto { Name = request.Name, UserId = request.UserId });
             var group = JsonConvert.DeserializeObject<GroupResponse>(response);
             return Ok(group);
         } catch (Exception e) {

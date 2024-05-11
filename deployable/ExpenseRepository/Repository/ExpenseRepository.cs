@@ -1,6 +1,6 @@
 ﻿using Domain;
-using Domain.DTO.Expense;
 using Domain.DTO.Group;
+using Messages.Expense;
 
 namespace ExpenseRepository.Repository;
 
@@ -13,7 +13,7 @@ public class ExpenseRepository : IExpenseRepository {
         CreateDB();
     }
 
-    public List<Expense> GetExpenseFromUserInGroup(ExpenseDTO expenseDto) {
+    public List<Expense> GetExpenseFromUserInGroup(ExpenseDto expenseDto) {
         try {
             return _context.UserExpenseTable
                 .Where(ue => ue.UserId == expenseDto.UserId)
@@ -51,7 +51,7 @@ public class ExpenseRepository : IExpenseRepository {
         }
     }
 
-    public List<Expense> GetExpensesFromGroup(ExpenseDTO expenseDto) {
+    public List<Expense> GetExpensesFromGroup(ExpenseDto expenseDto) {
         try {
             return _context.ExpenseTable
                 .Where(e => e.GroupId == expenseDto.GroupId)

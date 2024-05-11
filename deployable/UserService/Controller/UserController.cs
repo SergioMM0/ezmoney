@@ -3,6 +3,7 @@ using Domain.DTO.User;
 using Domain.packages;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using RPC;
 
 namespace UserService.Controller;
 

@@ -1,4 +1,4 @@
-﻿namespace Domain.DTO.Expense;
+﻿namespace Messages.Expense;
 
 public class ExpenseResponse {
     public int Id { get; set; }

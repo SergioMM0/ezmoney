@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using RPC;
 
 namespace Domain.packages.Interfaces;
 

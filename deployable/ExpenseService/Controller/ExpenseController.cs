@@ -1,8 +1,9 @@
-﻿using Domain.DTO.Expense;
-using Domain.DTO.Group;
+﻿using Domain.DTO.Group;
 using Domain.packages;
+using Messages.Expense;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using RPC;
 
 namespace ExpenseService.Controller;
 
@@ -17,9 +18,9 @@ public class ExpenseController : ControllerBase {
     }
 
     [HttpPost("GetExpensesFromUserInGroup")]
-    public async Task<ActionResult<List<ExpenseResponse>>> GetExpensesFromUserInGroup([FromBody] ExpenseDTO request) {
+    public async Task<ActionResult<List<ExpenseResponse>>> GetExpensesFromUserInGroup([FromBody] ExpenseDto request) {
         try {
-            var response = await _rpcClient.CallAsync(Operation.GetExpensesFromUserInGroup, new ExpenseDTO() { UserId = request.UserId, GroupId = request.GroupId });
+            var response = await _rpcClient.CallAsync(Operation.GetExpensesFromUserInGroup, new ExpenseDto() { UserId = request.UserId, GroupId = request.GroupId });
             List<ExpenseResponse> expenses = new List<ExpenseResponse>();
             expenses = JsonConvert.DeserializeObject<List<ExpenseResponse>>(response);
             return Ok(expenses);
@@ -33,7 +34,7 @@ public class ExpenseController : ControllerBase {
     public async Task<ActionResult<List<ExpenseResponse>>> AllExpensesFromGroup([FromRoute] int groupId) {
         try {
             var response = await _rpcClient.CallAsync(Operation.GetExpensesFromGroup,
-                new ExpenseDTO() { GroupId = groupId, UserId = 0 });
+                new ExpenseDto() { GroupId = groupId, UserId = 0 });
             List<ExpenseResponse> expenses = new List<ExpenseResponse>();
             expenses = JsonConvert.DeserializeObject<List<ExpenseResponse>>(response);
             return Ok(expenses);
