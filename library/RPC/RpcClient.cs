@@ -23,7 +23,7 @@ public class RpcClient : IDisposable {
     // It is an interface that can allow for mocking in unit tests
     // It is also a dependency that is injected into the class
     private readonly IConnection connection;
-    
+
     // Channel to communicate with RabbitMQ:
     // The channel is a fundamental construct in RabbitMQ, representing a virtual connection inside 
     // a physical TCP connection. It's used for all operations involving communication with the RabbitMQ 
@@ -35,7 +35,7 @@ public class RpcClient : IDisposable {
 
 
     private readonly IModel channel;
-    
+
     // Name of the queue for replies:
     // This variable stores the name of the queue specifically dedicated to receiving responses in RPC interactions.
     // In HTTP (Synchronous or Asynchronous) setups, each client typically sends requests to a server which processes them and sends back responses. 
@@ -49,9 +49,9 @@ public class RpcClient : IDisposable {
     // it is also declared only once when the RpcClient is instantiated, and is used throughout the client's lifecycle to receive responses from the server.
     // this significantly reduces the overhead of creating and managing multiple queues for each request-response cycle, thus making the responses 
     // "faster".
-    
+
     private readonly string replyQueueName;
-    
+
     // EventingBasicConsumer is a RabbitMQ consumer that uses event-based message handling.
     // This consumer is specifically used to asynchronously receive messages from the RabbitMQ broker.
     // When the RpcClient sends a request to the server, it expects a response. The responses are delivered to
@@ -91,7 +91,7 @@ public class RpcClient : IDisposable {
     public RpcClient(string topic, IConnectionFactoryProvider factoryProvider) {
         // Retrieving the connection details from the factory provider.
         var factory = factoryProvider.GetConnectionFactory();
-        
+
         this.topic = topic;
 
         connection = factory.CreateConnection();
@@ -148,7 +148,7 @@ public class RpcClient : IDisposable {
         //Messages sent to RabbitMQ must be in a format that can be reliably transmitted over the network and
         //understood by the message broker and any receiving clients. In the case of RabbitMQ, which is fundamentally agnostic
         //about the content of the messages, data must be transformed into a binary format—hence the byte array
-        
+
         var messageBytes = Encoding.UTF8.GetBytes(message);
         // Adding the correlation ID and the TaskCompletionSource to the pending requests dictionary.
         var tcs = new TaskCompletionSource<string>();
@@ -171,7 +171,7 @@ public class RpcClient : IDisposable {
             // If the response indicates an error, an ApplicationException is thrown with the error message.
             // This mechanism ensures that the caller receives the correct response data or an Exception from the RPC server.
             // as normally the repository will return only a string.
-            
+
             var response = JsonConvert.DeserializeObject<ApiResponse>(task.Result);
             if (!response.Success) {
                 throw new ApplicationException(response.ErrorMessage);

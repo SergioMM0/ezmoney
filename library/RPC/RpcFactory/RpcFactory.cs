@@ -3,7 +3,7 @@
 namespace RPC.RpcFactory;
 
 public class RpcFactory : IConnectionFactoryProvider {
-    
+
     public ConnectionFactory GetConnectionFactory() {
         return new ConnectionFactory {
             HostName = Environment.GetEnvironmentVariable("RABBITMQ_HOSTNAME"),

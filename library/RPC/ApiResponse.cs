@@ -1,4 +1,4 @@
-namespace RPC;
+﻿namespace RPC;
 
 public class ApiResponse {
 

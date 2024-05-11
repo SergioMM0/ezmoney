@@ -16,7 +16,7 @@ public class RpcServer : IDisposable {
     private readonly IModel channel;
     // The name of the queue "topic" to listen for RPC requests
     private readonly string queueName;
-    
+
     // Handler that processes incoming requests and returns responses:
     // This 'IRequestHandler' is an interface that abstracts the processing of various types of operations received through RPC calls.
     // Each operation (like creating, retrieving, or updating data) is associated with a specific method implemented under this interface.
@@ -35,7 +35,7 @@ public class RpcServer : IDisposable {
     private readonly IConnection connection;
     // Flag to track if the object has been disposed
     private bool disposed = false;
-    
+
 
     public RpcServer(string topic, IRequestHandler handler, IConnectionFactoryProvider factoryProvider) {
         // Obtain a connection factory from the provided factory provider
@@ -76,7 +76,7 @@ public class RpcServer : IDisposable {
 
         Console.WriteLine(" [x] Awaiting RPC requests on queue '{0}'", queueName);
     }
-    
+
     // Event handler that processes messages when they are received
     private void OnReceived(object model, BasicDeliverEventArgs ea) {
         // Initialize the response string

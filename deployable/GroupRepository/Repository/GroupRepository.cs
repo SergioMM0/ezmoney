@@ -63,6 +63,6 @@ public class GroupRepository : IGroupRepository {
         } catch (Exception e) {
             throw new ApplicationException("An error occurred while creating the database.", e);
         }
-        
+
     }
 }
