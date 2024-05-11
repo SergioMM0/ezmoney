@@ -6,14 +6,14 @@ using RPC.Interfaces;
 namespace UserRepository.Service;
 
 public class UserRepositoryHandlers : IRequestHandler {
-    private HandlerRegistry registry;
+    private readonly HandlerRegistry _registry;
     private readonly UserRepositoryService _userRepositoryService;
     
     public UserRepositoryHandlers(UserRepositoryService userRepositoryService = null) {
-        registry = new HandlerRegistry();
-        registry.RegisterHandler(Operation.CreateUser, HandleCreateUser);
-        registry.RegisterHandler(Operation.GetAllUsers, HandleGetAllUsers);
-        registry.RegisterHandler(Operation.LoginUser, HandleLoginUser);
+        _registry = new HandlerRegistry();
+        _registry.RegisterHandler(Operation.CreateUser, HandleCreateUser);
+        _registry.RegisterHandler(Operation.GetAllUsers, HandleGetAllUsers);
+        _registry.RegisterHandler(Operation.LoginUser, HandleLoginUser);
         _userRepositoryService = userRepositoryService;
         // Add more handlers as needed
     }
@@ -54,7 +54,7 @@ public class UserRepositoryHandlers : IRequestHandler {
     }
 
     private string ProcessRequest(Operation operation, object data) {
-        return registry.HandleRequest(operation, data);
+        return _registry.HandleRequest(operation, data);
     }
 
     public string HandleRequest(Operation operation, object data) {

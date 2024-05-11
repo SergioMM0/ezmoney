@@ -9,16 +9,6 @@ namespace GroupService.Controller;
 [ApiController]
 [Route("group")]
 public class GroupController : ControllerBase {
-
-    /* NOT IN THE INITIAL REQUIREMENTS, MIGHT BE USED LATER
-    [HttpGet("/{groupId}/members")]
-    public IActionResult AllMembersFromGroup([FromRoute] int groupId) {
-        if(groupId == 1) {
-            return Ok("yo mama says hi");
-        }
-        return BadRequest("No bueno, to test this endpoint OK result insert 1 for group id");
-    }
-    */
     private readonly RpcClient _rpcClient;
 
     public GroupController(RpcClient rpcClient) {
@@ -40,7 +30,8 @@ public class GroupController : ControllerBase {
     [HttpPost]
     public async Task<ActionResult<GroupResponse>> Create([FromBody] PostGroup request) {
         try {
-            var response = await _rpcClient.CallAsync(Operation.CreateGroup, new GroupDto { Name = request.Name, UserId = request.UserId });
+            var response =
+                await _rpcClient.CallAsync(Operation.CreateGroup, new GroupDto { Name = request.Name, UserId = request.UserId });
             var group = JsonConvert.DeserializeObject<GroupResponse>(response);
             return Ok(group);
         } catch (Exception e) {
@@ -56,4 +47,14 @@ public class GroupController : ControllerBase {
         }
         return BadRequest("No bueno, to test this endpoint OK result insert 1 and 1 for both ids");
     }
+
+    /* NOT IN THE INITIAL REQUIREMENTS, MIGHT BE USED LATER
+[HttpGet("/{groupId}/members")]
+public IActionResult AllMembersFromGroup([FromRoute] int groupId) {
+    if(groupId == 1) {
+        return Ok("yo mama says hi");
+    }
+    return BadRequest("No bueno, to test this endpoint OK result insert 1 for group id");
+}
+*/
 }

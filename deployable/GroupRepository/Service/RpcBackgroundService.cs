@@ -14,11 +14,10 @@ public class RpcBackgroundService : BackgroundService {
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-        using (var scope = _scopeFactory.CreateScope()) {
-            var groupServiceHandler = scope.ServiceProvider.GetRequiredService<GroupRepositoryHandlers>();
-            var factoryProvider = scope.ServiceProvider.GetRequiredService<IConnectionFactoryProvider>();
-            var rpcServer = new RpcServer(_topics.Topic, groupServiceHandler, factoryProvider);
-            stoppingToken.WaitHandle.WaitOne();
-        }
+        using var scope = _scopeFactory.CreateScope();
+        var groupServiceHandler = scope.ServiceProvider.GetRequiredService<GroupRepositoryHandlers>();
+        var factoryProvider = scope.ServiceProvider.GetRequiredService<IConnectionFactoryProvider>();
+        var rpcServer = new RpcServer(_topics.Topic, groupServiceHandler, factoryProvider);
+        stoppingToken.WaitHandle.WaitOne();
     }
 }

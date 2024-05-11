@@ -34,7 +34,7 @@ public class RpcServer : IDisposable {
     // Connection to the RabbitMQ broker
     private readonly IConnection _connection;
     // Flag to track if the object has been disposed
-    private bool _disposed = false;
+    private bool _disposed;
 
 
     public RpcServer(string topic, IRequestHandler handler, IConnectionFactoryProvider factoryProvider) {
@@ -71,7 +71,7 @@ public class RpcServer : IDisposable {
         // and careful control over message acknowledgment is required to maintain consistency and reliability of the system.
 
         var consumer = new EventingBasicConsumer(_channel);
-        consumer.Received += OnReceived;
+        consumer.Received += OnReceived!;
         _channel.BasicConsume(queue: _queueName, autoAck: false, consumer: consumer);
 
         Console.WriteLine(" [x] Awaiting RPC requests on queue '{0}'", _queueName);
@@ -80,7 +80,7 @@ public class RpcServer : IDisposable {
     // Event handler that processes messages when they are received
     private void OnReceived(object model, BasicDeliverEventArgs ea) {
         // Initialize the response string
-        string response = null;
+        string response = null!;
         // Extract the basic properties and create reply properties
         var props = ea.BasicProperties;
         // Create reply properties with the correlation ID
@@ -95,7 +95,7 @@ public class RpcServer : IDisposable {
             // The request handler processes the request based on the operation type and returns a response
             // The response is then serialized back to JSON format
             // Each Repository Service has its own concretization of IRequestHandler, which contains the logic to handle different operations
-            response = _requestHandler.HandleRequest(request.Operation, request.Data);
+            response = _requestHandler.HandleRequest(request!.Operation, request.Data);
         } catch (Exception ex) {
             // Log and serialize error information
             Console.WriteLine("Error processing request: " + ex);
@@ -127,8 +127,9 @@ public class RpcServer : IDisposable {
         }
     }
 }
+
 // Class representing a request message
 public class Request {
     public Operation Operation { get; set; }
-    public object Data { get; set; }
+    public object Data { get; set; } = null!;
 }

@@ -18,9 +18,9 @@ public class ExpenseController : ControllerBase {
     [HttpPost("GetExpensesFromUserInGroup")]
     public async Task<ActionResult<List<ExpenseResponse>>> GetExpensesFromUserInGroup([FromBody] ExpenseDto request) {
         try {
-            var response = await _rpcClient.CallAsync(Operation.GetExpensesFromUserInGroup, new ExpenseDto() { UserId = request.UserId, GroupId = request.GroupId });
-            List<ExpenseResponse> expenses = new List<ExpenseResponse>();
-            expenses = JsonConvert.DeserializeObject<List<ExpenseResponse>>(response);
+            var response = await _rpcClient.CallAsync(Operation.GetExpensesFromUserInGroup,
+                new ExpenseDto() { UserId = request.UserId, GroupId = request.GroupId });
+            var expenses = JsonConvert.DeserializeObject<List<ExpenseResponse>>(response);
             return Ok(expenses);
         } catch (Exception e) {
             Console.WriteLine(e);
@@ -33,8 +33,7 @@ public class ExpenseController : ControllerBase {
         try {
             var response = await _rpcClient.CallAsync(Operation.GetExpensesFromGroup,
                 new ExpenseDto() { GroupId = groupId, UserId = 0 });
-            List<ExpenseResponse> expenses = new List<ExpenseResponse>();
-            expenses = JsonConvert.DeserializeObject<List<ExpenseResponse>>(response);
+            var expenses = JsonConvert.DeserializeObject<List<ExpenseResponse>>(response);
             return Ok(expenses);
         } catch (Exception e) {
             Console.WriteLine(e);
@@ -45,8 +44,12 @@ public class ExpenseController : ControllerBase {
     [HttpPost]
     public async Task<ActionResult<ExpenseResponse>> Create([FromBody] PostExpense request) {
         try {
-            var response = await _rpcClient.CallAsync(Operation.CreateExpense, new PostExpense { Amount = request.Amount, Description = request.Description, GroupId = request.GroupId, OwnerId = request.OwnerId, Participants = request.Participants, Date = DateTime.Now });
-            ExpenseResponse expense = JsonConvert.DeserializeObject<ExpenseResponse>(response);
+            var response = await _rpcClient.CallAsync(Operation.CreateExpense,
+                new PostExpense {
+                    Amount = request.Amount, Description = request.Description, GroupId = request.GroupId, OwnerId = request.OwnerId,
+                    Participants = request.Participants, Date = DateTime.Now
+                });
+            var expense = JsonConvert.DeserializeObject<ExpenseResponse>(response);
             return Ok(expense);
         } catch (Exception e) {
             Console.WriteLine(e);

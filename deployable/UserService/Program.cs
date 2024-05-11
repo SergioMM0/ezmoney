@@ -5,8 +5,6 @@ using RPC.RpcFactory;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
@@ -20,6 +18,7 @@ builder.Services.AddSingleton<RpcClient>(provider =>
         provider.GetRequiredService<IConnectionFactoryProvider>()
     )
 );
+
 builder.Services.AddSingleton<Topics>(sp =>
     sp.GetRequiredService<IOptions<Topics>>().Value);
 var app = builder.Build();
