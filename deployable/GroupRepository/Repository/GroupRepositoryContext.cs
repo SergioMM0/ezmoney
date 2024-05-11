@@ -3,10 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GroupRepository.Repository;
 
-public class GroupRepositoryContext : DbContext {
-    public GroupRepositoryContext(DbContextOptions<GroupRepositoryContext> options) : base(options) {
-
-    }
+public class GroupRepositoryContext(DbContextOptions<GroupRepositoryContext> options) : DbContext(options) {
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         modelBuilder.Entity<Group>()
             .Property(p => p.Id)
@@ -14,6 +11,8 @@ public class GroupRepositoryContext : DbContext {
         modelBuilder.Entity<UserGroup>()
             .HasKey(ug => new { ug.UserId, ug.GroupId });
     }
+
     public DbSet<Group> GroupTable { get; set; }
+
     public DbSet<UserGroup> UserGroupTable { get; set; }
 }

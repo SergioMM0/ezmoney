@@ -1,5 +1,5 @@
 ﻿using Domain;
-using Domain.DTO.Group;
+using Messages.Group;
 
 namespace GroupRepository.Repository;
 
@@ -29,7 +29,7 @@ public class GroupRepository : IGroupRepository {
         return _context.GroupTable.ToList();
     }
 
-    public Group AddGroup(GroupDTO group) {
+    public Group AddGroup(GroupDto group) {
         Group newGroup = new Group {
             Name = group.Name
         };
@@ -63,6 +63,6 @@ public class GroupRepository : IGroupRepository {
         } catch (Exception e) {
             throw new ApplicationException("An error occurred while creating the database.", e);
         }
-        
+
     }
 }

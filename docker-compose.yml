@@ -100,7 +100,7 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-    
+  
   expense-repo:
     image: expense-repo
     build:

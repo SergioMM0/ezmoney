@@ -1,6 +1,6 @@
-﻿using Domain.packages;
-using Messages.RPC;
+﻿using Messages.RPC;
 using Microsoft.Extensions.Options;
+using RPC;
 using RPC.RpcFactory;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +15,7 @@ builder.Services.AddSingleton<IConnectionFactoryProvider, RpcFactory>();
 builder.Services.Configure<Topics>(builder.Configuration.GetSection("RPCMessages"));
 builder.Services.AddSingleton<Topics>(sp =>
     sp.GetRequiredService<IOptions<Topics>>().Value);
-builder.Services.AddSingleton<RpcClient>(provider => 
+builder.Services.AddSingleton<RpcClient>(provider =>
     new RpcClient(
         provider.GetRequiredService<IOptions<Topics>>().Value.Topic,
         provider.GetRequiredService<IConnectionFactoryProvider>()

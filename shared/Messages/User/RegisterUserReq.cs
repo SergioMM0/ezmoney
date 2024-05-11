@@ -1,4 +1,4 @@
-﻿namespace Domain.DTO.User;
+﻿namespace Messages.User;
 
 /// <summary>
 /// DTO for registering a user

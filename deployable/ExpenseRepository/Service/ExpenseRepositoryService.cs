@@ -1,7 +1,6 @@
 ﻿using Domain;
-using Domain.DTO.Expense;
-using Domain.DTO.Group;
 using ExpenseRepository.Repository;
+using Messages.Expense;
 
 namespace ExpenseRepository.Service;
 
@@ -12,7 +11,7 @@ public class ExpenseRepositoryService {
         _expenseRepository = expenseRepository;
     }
 
-    public List<Expense> GetExpenseFromUserInGroup(ExpenseDTO expenseDto) {
+    public List<Expense> GetExpenseFromUserInGroup(ExpenseDto expenseDto) {
         return _expenseRepository.GetExpenseFromUserInGroup(expenseDto);
     }
 
@@ -20,7 +19,7 @@ public class ExpenseRepositoryService {
         return _expenseRepository.AddExpense(expense);
     }
 
-    public List<Expense> GetExpensesFromGroup(ExpenseDTO expenseDto) {
+    public List<Expense> GetExpensesFromGroup(ExpenseDto expenseDto) {
         return _expenseRepository.GetExpensesFromGroup(expenseDto);
     }
 }

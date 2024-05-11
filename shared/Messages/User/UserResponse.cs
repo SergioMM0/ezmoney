@@ -1,4 +1,4 @@
-﻿namespace Domain.DTO.User;
+﻿namespace Messages.User;
 
 /// <summary>
 /// Response object for a user 

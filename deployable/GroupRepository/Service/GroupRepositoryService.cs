@@ -1,6 +1,6 @@
 ﻿using Domain;
-using Domain.DTO.Group;
 using GroupRepository.Repository;
+using Messages.Group;
 
 namespace GroupRepository.Service;
 
@@ -19,7 +19,7 @@ public class GroupRepositoryService {
         return _groupRepository.GetAllGroups();
     }
 
-    public Group AddGroup(GroupDTO group) {
+    public Group AddGroup(GroupDto group) {
         return _groupRepository.AddGroup(group);
     }
 }

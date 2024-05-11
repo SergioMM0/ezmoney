@@ -1,8 +1,8 @@
 ﻿using Domain;
-using Domain.DTO.User;
-using Domain.packages;
+using Messages.User;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using RPC;
 
 namespace UserService.Controller;
 

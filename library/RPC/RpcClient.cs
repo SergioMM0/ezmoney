@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Text;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.Threading.Tasks;
 using RPC.RpcFactory;
 
-namespace Domain.packages;
+namespace RPC;
 
 /// <summary>
 /// RPC (Remote Process Call) Client class that sends requests to the server and receives responses.
@@ -24,8 +22,8 @@ public class RpcClient : IDisposable {
     // Object containing the connection to the RabbitMQ server
     // It is an interface that can allow for mocking in unit tests
     // It is also a dependency that is injected into the class
-    private readonly IConnection connection;
-    
+    private readonly IConnection _connection;
+
     // Channel to communicate with RabbitMQ:
     // The channel is a fundamental construct in RabbitMQ, representing a virtual connection inside 
     // a physical TCP connection. It's used for all operations involving communication with the RabbitMQ 
@@ -36,8 +34,8 @@ public class RpcClient : IDisposable {
     // in client-server interactions.
 
 
-    private readonly IModel channel;
-    
+    private readonly IModel _channel;
+
     // Name of the queue for replies:
     // This variable stores the name of the queue specifically dedicated to receiving responses in RPC interactions.
     // In HTTP (Synchronous or Asynchronous) setups, each client typically sends requests to a server which processes them and sends back responses. 
@@ -51,9 +49,9 @@ public class RpcClient : IDisposable {
     // it is also declared only once when the RpcClient is instantiated, and is used throughout the client's lifecycle to receive responses from the server.
     // this significantly reduces the overhead of creating and managing multiple queues for each request-response cycle, thus making the responses 
     // "faster".
-    
-    private readonly string replyQueueName;
-    
+
+    private readonly string _replyQueueName;
+
     // EventingBasicConsumer is a RabbitMQ consumer that uses event-based message handling.
     // This consumer is specifically used to asynchronously receive messages from the RabbitMQ broker.
     // When the RpcClient sends a request to the server, it expects a response. The responses are delivered to
@@ -68,7 +66,7 @@ public class RpcClient : IDisposable {
     // In the RpcClient, 'pendingRequests' is implemented as a ConcurrentDictionary where each entry maps a unique correlation ID to a TaskCompletionSource<string>.
     // The correlation ID is a unique identifier for each request sent to the server, ensuring that responses can be matched correctly to their corresponding requests.
 
-    // The TaskCompletionSource<string> associated with each correlation ID represent a Task awaiting for the result of an asynchronous operation. When a request is sent to the server via RabbitMQ,
+    // The TaskCompletionSource<string> associated with each correlation ID represent a Task waiting for the result of an asynchronous operation. When a request is sent to the server via RabbitMQ,
     // a new TaskCompletionSource<string> is created and added to 'pendingRequests' with the correlation ID of the request. This TaskCompletionSource is then used to "catch" the result of a request.
 
     // When a response arrives from the server, the RpcClient's consumer event handler search the correlation ID of the response in the the 'pendingRequests' dictionary.
@@ -83,46 +81,50 @@ public class RpcClient : IDisposable {
     //
     // This approach ensures efficient handling of responses without blocking the thread.
 
-    private readonly EventingBasicConsumer consumer;
-    private readonly ConcurrentDictionary<string, TaskCompletionSource<string>> pendingRequests = new ConcurrentDictionary<string, TaskCompletionSource<string>>();
+    private readonly EventingBasicConsumer _consumer;
+
+    private readonly ConcurrentDictionary<string, TaskCompletionSource<string>> _pendingRequests =
+        new ConcurrentDictionary<string, TaskCompletionSource<string>>();
+
     // The topic is the routing key used to send messages to the server.
-    private readonly string topic;
+    private readonly string _topic;
+
     // Flag to track whether the object has been disposed.
-    private bool disposed = false;
+    private bool _disposed;
 
     public RpcClient(string topic, IConnectionFactoryProvider factoryProvider) {
         // Retrieving the connection details from the factory provider.
         var factory = factoryProvider.GetConnectionFactory();
-        
-        this.topic = topic;
 
-        connection = factory.CreateConnection();
+        this._topic = topic;
+
+        _connection = factory.CreateConnection();
         // Creating a channel for communication with RabbitMQ.
         // The channel is a virtual connection inside a physical TCP connection.
         // And will persist throughout the lifetime of the RpcClient object.
-        channel = connection.CreateModel();
+        _channel = _connection.CreateModel();
         // Declaring a queue for receiving responses from the server.
         // The queue is exclusive and auto-deleted when the client disconnects.
         // The replyQueueName is a temporary queue that is used to receive responses from the server.
         // The replyQueueName is unique to each client and is used to receive responses to requests made by that client.
         // It will persist until the Client is Disposed.
-        replyQueueName = channel.QueueDeclare().QueueName;
+        _replyQueueName = _channel.QueueDeclare().QueueName;
         // Creating a consumer to listen for messages arriving in the reply queue.
         // The consumer is an EventingBasicConsumer that triggers the Received event each time a new message is delivered.
-        consumer = new EventingBasicConsumer(channel);
+        _consumer = new EventingBasicConsumer(_channel);
         // Subscribing the consumer to the reply queue to start receiving messages.
         // The consumer listens for messages arriving in the reply queue and triggers the Received event each time a new message is delivered.
-        channel.BasicConsume(
-            consumer: consumer,
-            queue: replyQueueName,
+        _channel.BasicConsume(
+            consumer: _consumer,
+            queue: _replyQueueName,
             autoAck: true
         );
         // Event handler for processing incoming messages.
         // The event handler processes incoming messages by extracting the correlation ID from the message properties,
         // matching it to a pending request, and completing the associated TaskCompletionSource with the message payload.
         // This mechanism ensures that responses are correctly matched to their corresponding requests.
-        consumer.Received += (model, ea) => {
-            if (pendingRequests.TryRemove(ea.BasicProperties.CorrelationId, out var tcs)) {
+        _consumer.Received += (_, ea) => {
+            if (_pendingRequests.TryRemove(ea.BasicProperties.CorrelationId, out var tcs)) {
                 var response = Encoding.UTF8.GetString(ea.Body.ToArray());
                 tcs.SetResult(response);
             } else {
@@ -136,10 +138,10 @@ public class RpcClient : IDisposable {
         var correlationId = Guid.NewGuid().ToString();
         // Creating basic properties for the MESSAGE.
         // The basic properties include the correlation ID and the reply queue name.
-        var props = channel.CreateBasicProperties();
+        var props = _channel.CreateBasicProperties();
         props.CorrelationId = correlationId;
         // The replyTo property is set to the reply queue name.
-        props.ReplyTo = replyQueueName;
+        props.ReplyTo = _replyQueueName;
         // Creating a request object with the operation and data.
         // data is the object that has been serialized by the controller it contains the necessary
         // information to perform the operation.
@@ -150,15 +152,15 @@ public class RpcClient : IDisposable {
         //Messages sent to RabbitMQ must be in a format that can be reliably transmitted over the network and
         //understood by the message broker and any receiving clients. In the case of RabbitMQ, which is fundamentally agnostic
         //about the content of the messages, data must be transformed into a binary format—hence the byte array
-        
+
         var messageBytes = Encoding.UTF8.GetBytes(message);
         // Adding the correlation ID and the TaskCompletionSource to the pending requests dictionary.
         var tcs = new TaskCompletionSource<string>();
-        pendingRequests[correlationId] = tcs;
+        _pendingRequests[correlationId] = tcs;
         // Publishing the message to the server.
-        channel.BasicPublish(
+        _channel.BasicPublish(
             exchange: "",
-            routingKey: topic,
+            routingKey: _topic,
             basicProperties: props,
             body: messageBytes);
         // Returning the Task associated with the request.
@@ -173,7 +175,7 @@ public class RpcClient : IDisposable {
             // If the response indicates an error, an ApplicationException is thrown with the error message.
             // This mechanism ensures that the caller receives the correct response data or an Exception from the RPC server.
             // as normally the repository will return only a string.
-            
+
             var response = JsonConvert.DeserializeObject<ApiResponse>(task.Result);
             if (!response.Success) {
                 throw new ApplicationException(response.ErrorMessage);
@@ -187,14 +189,14 @@ public class RpcClient : IDisposable {
     // The Dispose method is called to release resources used by the RpcClient object.
     // This method ensures that the connection to the RabbitMQ server is closed and that the channel is disposed of properly.
     public void Dispose() {
-        if (!disposed) {
-            if (channel.IsOpen) {
-                channel.Close();
+        if (!_disposed) {
+            if (_channel.IsOpen) {
+                _channel.Close();
             }
-            if (connection.IsOpen) {
-                connection.Close();
+            if (_connection.IsOpen) {
+                _connection.Close();
             }
-            disposed = true;
+            _disposed = true;
         }
     }
 }
