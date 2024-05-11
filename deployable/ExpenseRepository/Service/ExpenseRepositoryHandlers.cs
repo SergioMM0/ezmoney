@@ -1,10 +1,8 @@
 ﻿using Domain;
-using Domain.DTO.Group;
-using Domain.packages;
-using Domain.packages.Interfaces;
 using Messages.Expense;
 using Newtonsoft.Json;
 using RPC;
+using RPC.Interfaces;
 
 namespace ExpenseRepository.Service;
 

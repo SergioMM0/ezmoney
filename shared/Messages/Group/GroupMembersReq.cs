@@ -1,4 +1,4 @@
-﻿namespace Domain.DTO.Group;
+﻿namespace Messages.Group;
 
 /// <summary>
 /// DTO for request to get all members from a group

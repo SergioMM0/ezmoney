@@ -1,5 +1,4 @@
 ﻿using Domain;
-using Domain.DTO.Group;
 using GroupRepository.Repository;
 using Messages.Group;
 

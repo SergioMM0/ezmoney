@@ -1,8 +1,7 @@
 ﻿using Domain;
-using Domain.packages;
-using Domain.packages.Interfaces;
 using Newtonsoft.Json;
 using RPC;
+using RPC.Interfaces;
 
 namespace UserRepository.Service;
 

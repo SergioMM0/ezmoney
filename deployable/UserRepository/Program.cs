@@ -1,5 +1,4 @@
-﻿using Domain.packages;
-using Messages.RPC;
+﻿using Messages.RPC;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RPC.RpcFactory;

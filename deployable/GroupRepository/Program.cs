@@ -1,5 +1,4 @@
-﻿using Domain.packages;
-using GroupRepository.Repository;
+﻿using GroupRepository.Repository;
 using GroupRepository.Service;
 using Messages.RPC;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;

@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Text;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.Threading.Tasks;
-using RPC;
 using RPC.RpcFactory;
 
-namespace Domain.packages;
+namespace RPC;
 
 /// <summary>
 /// RPC (Remote Process Call) Client class that sends requests to the server and receives responses.

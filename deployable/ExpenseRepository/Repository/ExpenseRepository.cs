@@ -1,5 +1,4 @@
 ﻿using Domain;
-using Domain.DTO.Group;
 using Messages.Expense;
 
 namespace ExpenseRepository.Repository;

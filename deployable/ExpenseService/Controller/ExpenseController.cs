@@ -1,6 +1,4 @@
-﻿using Domain.DTO.Group;
-using Domain.packages;
-using Messages.Expense;
+﻿using Messages.Expense;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using RPC;

@@ -1,7 +1,6 @@
-﻿
-using Domain.packages;
-using Messages.RPC;
+﻿using Messages.RPC;
 using Microsoft.Extensions.Options;
+using RPC;
 using RPC.RpcFactory;
 
 var builder = WebApplication.CreateBuilder(args);

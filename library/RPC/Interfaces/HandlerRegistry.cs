@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
-using RPC;
 
-namespace Domain.packages.Interfaces;
+namespace RPC.Interfaces;
 
 public class HandlerRegistry : IRequestHandler {
     private readonly Dictionary<Operation, Func<object, string>> handlers = new Dictionary<Operation, Func<object, string>>();

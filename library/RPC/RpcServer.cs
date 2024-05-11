@@ -1,8 +1,8 @@
 ﻿using System.Text;
-using Domain.packages.Interfaces;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RPC.Interfaces;
 using RPC.RpcFactory;
 
 namespace RPC;
