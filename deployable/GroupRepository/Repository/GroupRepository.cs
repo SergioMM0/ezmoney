@@ -29,22 +29,28 @@ public class GroupRepository : IGroupRepository {
         return _context.GroupTable.ToList();
     }
 
-    public Group AddGroup(GroupDto group) {
-        Group newGroup = new Group {
-            Name = group.Name
+    public Group AddGroup(CreateGroupReq group) {
+        // Map DTO into BE object
+        var newGroup = new Group {
+            Name = group.Name,
+            Token = group.Token
         };
-
         try {
+            // Add group object to the DB
             _context.GroupTable.Add(newGroup);
             _context.SaveChanges();
-            AddUserGroup(group.UserId, newGroup.Id);
+            
+            // Add UserGroup object to DB to link the user to the group
+            AddUserGroup(group.OwnerId, newGroup.Id);
+            
+            // Return the newly created group
             return newGroup;
         } catch (Exception ex) {
             throw new ApplicationException("An error occurred while adding the group.", ex);
         }
     }
+    
     public void AddUserGroup(int userId, int groupId) {
-
         try {
             UserGroup userGroup = new UserGroup {
                 UserId = userId,
@@ -56,6 +62,9 @@ public class GroupRepository : IGroupRepository {
             throw new ApplicationException("An error occurred while adding the user to the group.", e);
         }
     }
+
+    #region DB
+
     private void CreateDB() {
         try {
             Console.WriteLine("Creating database...");
@@ -63,6 +72,7 @@ public class GroupRepository : IGroupRepository {
         } catch (Exception e) {
             throw new ApplicationException("An error occurred while creating the database.", e);
         }
-
     }
+
+    #endregion
 }

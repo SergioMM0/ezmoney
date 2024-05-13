@@ -19,7 +19,7 @@ public class GroupRepositoryService {
         return _groupRepository.GetAllGroups();
     }
 
-    public Group AddGroup(GroupDto group) {
+    public Group AddGroup(CreateGroupReq group) {
         return _groupRepository.AddGroup(group);
     }
 }

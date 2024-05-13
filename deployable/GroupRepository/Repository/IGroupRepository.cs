@@ -6,6 +6,6 @@ namespace GroupRepository.Repository;
 public interface IGroupRepository {
     public List<Group> GetGroupsFromUser(User user);
     public List<Group> GetAllGroups();
-    public Group AddGroup(GroupDto group);
+    public Group AddGroup(CreateGroupReq group);
     public void AddUserGroup(int userId, int groupId);
 }
