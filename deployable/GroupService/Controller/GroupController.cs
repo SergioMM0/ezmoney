@@ -35,15 +35,14 @@ public class GroupController(RpcClient rpcClient) : ControllerBase {
     public async Task<ActionResult<GroupResponse>> Create([FromBody] PostGroup request) {
         try {
             // Create object to send to the group repository
-            var dto = new CreateGroupReq() {
+            var createGroupReq = new CreateGroupReq() {
                 OwnerId = request.OwnerId,
                 Name = request.Name,
                 Token = GenerateGroupToken()
             };
             
             // Sends the request to the group repository
-            var response =
-                await rpcClient.CallAsync(Operation.CreateGroup, dto);
+            var response = await rpcClient.CallAsync(Operation.CreateGroup, createGroupReq);
             
             // Deserializes the response and returns it
             var group = JsonConvert.DeserializeObject<GroupResponse>(response);
