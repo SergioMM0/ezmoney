@@ -1,4 +1,4 @@
-﻿namespace Messages.Group;
+﻿namespace Messages.Group.Dto;
 
 /// <summary>
 /// Clients request to create a group

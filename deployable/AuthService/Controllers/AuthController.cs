@@ -1,4 +1,5 @@
 ﻿using AuthService.Services;
+using Messages.Auth;
 using Messages.User;
 using Microsoft.AspNetCore.Mvc;
 

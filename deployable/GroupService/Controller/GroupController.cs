@@ -1,5 +1,6 @@
 ﻿using Domain;
 using Messages.Group;
+using Messages.Group.Dto;
 using Messages.Group.Request;
 using Messages.Group.Response;
 using Microsoft.AspNetCore.Mvc;
