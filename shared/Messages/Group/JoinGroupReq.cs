@@ -4,6 +4,13 @@
 /// DTO for user joining a group
 /// </summary>
 public class JoinGroupReq {
+    /// <summary>
+    /// The id of the user that wants to join the group
+    /// </summary>
     public required int UserId { get; set; }
-    public required int Token { get; set; } // Join token of the group
+    
+    /// <summary>
+    /// The token of the group that the user wants to join
+    /// </summary>
+    public required string Token { get; set; }
 }

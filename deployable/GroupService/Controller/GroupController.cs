@@ -15,9 +15,14 @@ public class GroupController(RpcClient rpcClient) : ControllerBase {
 
     /// <summary>
     /// Retrieves all groups from a user based on userId.
+    /// <br/> - Sends a request through RPC to:
+    /// <br/> - GroupRepository
+    /// <br/> - UserRepository
+    /// <br/>
+    /// TODO: Add check for user exists
     /// </summary>
-    /// <param name="userId"><c>int</c></param>
-    /// <returns><c>List</c> of <c>GroupResponse</c></returns>
+    /// <param name="userId"><see cref="int"/></param>
+    /// <returns>A <see cref="IActionResult"/> containing a <see cref="List{T}"/> of <see cref="GroupResponse"/> objects.</returns>
     [HttpGet("{userId}/groups")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<GroupResponse>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -39,10 +44,15 @@ public class GroupController(RpcClient rpcClient) : ControllerBase {
     }
 
     /// <summary>
-    /// Process the request to create a new group. Sends the request to the group repository.
+    /// Process the request to create a new group.
+    /// <br/>- Sends a request through RPC to:
+    /// <br/>- GroupRepository
+    /// <br/>- UserRepository
+    /// <br/>
+    /// <br/>-TODO: Add check for user exists
     /// </summary>
-    /// <param name="request"><c>PostGroup</c></param>
-    /// <returns>GroupResponse object</returns>
+    /// <param name="request"><see cref="PostGroup"/></param>
+    /// <returns>A <see cref="IActionResult"/> of <see cref="GroupResponse"/></returns>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GroupResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -68,25 +78,39 @@ public class GroupController(RpcClient rpcClient) : ControllerBase {
         }
     }
 
+    /// <summary>
+    /// Process the request to join a group.
+    /// <br/>- Sends a request through RPC to:
+    /// <br/>- GroupRepository
+    /// <br/>- UserRepository
+    /// </summary>
+    /// <param name="request"><see cref="JoinGroupReq"/></param>
     [HttpPost("join")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public IActionResult Join([FromBody] JoinGroupReq request) {
-        if (request.Token == 1 && request.UserId == 1) {
-            return Ok("User joined group");
+        try {
+            // Create request object to send to the group repository
+            var joinGroupReq = new JoinGroupReq() {
+                UserId = request.UserId,
+                Token = request.Token
+            };
+            
+            // Sends the request to the group repository
+            var response = rpcClient.CallAsync(Operation.JoinGroup, joinGroupReq);
+            
+            
+            return NoContent();
+            
+        } catch (Exception e) {
+            Console.WriteLine(e);
+            return StatusCodes.Status500InternalServerError("Error joining group");
         }
-        return BadRequest("No bueno, to test this endpoint OK result insert 1 and 1 for both ids");
     }
     
     private string GenerateGroupToken() {
         return Guid.NewGuid().ToString();
     }
-
-    /* NOT IN THE INITIAL REQUIREMENTS, MIGHT BE USED LATER
-[HttpGet("/{groupId}/members")]
-public IActionResult AllMembersFromGroup([FromRoute] int groupId) {
-    if(groupId == 1) {
-        return Ok("yo mama says hi");
-    }
-    return BadRequest("No bueno, to test this endpoint OK result insert 1 for group id");
-}
-*/
 }

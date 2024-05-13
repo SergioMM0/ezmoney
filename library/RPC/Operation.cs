@@ -10,5 +10,6 @@ public enum Operation {
     CreateExpense,
     GetExpensesFromGroup,
     GetExpensesFromUser,
-    GetExpensesFromUserInGroup
+    GetExpensesFromUserInGroup,
+    JoinGroup
 }

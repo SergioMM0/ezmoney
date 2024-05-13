@@ -18,6 +18,7 @@ public class GroupRepositoryHandlers : IRequestHandler {
         _registry.RegisterHandler(Operation.CreateGroup, HandleCreateGroup);
         _registry.RegisterHandler(Operation.GetAllGroups, HandleGetAllGroups);
         _registry.RegisterHandler(Operation.GetGroupsFromUser, HandleGetGroupsFromUser);
+        _registry.RegisterHandler(Operation.JoinGroup, HandleJoinGroup);
         _groupRepositoryService = groupRepositoryService;
     }
 
@@ -52,6 +53,18 @@ public class GroupRepositoryHandlers : IRequestHandler {
         try {
             var request = JsonConvert.DeserializeObject<GroupsUserReq>(data.ToString()!);
             var groups = _groupRepositoryService.GetGroupsFromUser(request!.UserId);
+            var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(groups) };
+            return JsonConvert.SerializeObject(response);
+        } catch (Exception e) {
+            var response = new ApiResponse { Success = false, ErrorMessage = e.Message };
+            return JsonConvert.SerializeObject(response);
+        }
+    }
+    
+    private string HandleJoinGroup(object data) {
+        try {
+            var request = JsonConvert.DeserializeObject<JoinGroupReq>(data.ToString()!);
+            var groups = _groupRepositoryService.JoinGroup(request);
             var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(groups) };
             return JsonConvert.SerializeObject(response);
         } catch (Exception e) {
