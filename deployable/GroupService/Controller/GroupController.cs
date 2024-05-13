@@ -1,5 +1,7 @@
 ﻿using Domain;
 using Messages.Group;
+using Messages.Group.Request;
+using Messages.Group.Response;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using RPC;
@@ -10,12 +12,23 @@ namespace GroupService.Controller;
 [Route("group")]
 public class GroupController(RpcClient rpcClient) : ControllerBase {
 
+    /// <summary>
+    /// Retrieves all groups from a user based on userId.
+    /// </summary>
+    /// <param name="userId"><c>int</c></param>
+    /// <returns><c>List</c> of <c>GroupResponse</c></returns>
     [HttpGet("{userId}/groups")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<GroupResponse>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<List<GroupResponse>>> GetAllGroupsOfUser([FromRoute] int userId) {
         try {
-            var response = await rpcClient.CallAsync(Operation.GetGroupFromUser, new User { Id = userId, Name = "", PhoneNumber = "" });
+            // Create request object to send to the group repository
+            var groupsUserReq = new GroupsUserReq() {
+                UserId = userId
+            };
+            
+            // Fetches all groups from user
+            var response = await rpcClient.CallAsync(Operation.GetGroupsFromUser, groupsUserReq);
             var groups = JsonConvert.DeserializeObject<List<GroupResponse>>(response);
             return Ok(groups);
         } catch (Exception e) {
@@ -34,7 +47,7 @@ public class GroupController(RpcClient rpcClient) : ControllerBase {
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<GroupResponse>> Create([FromBody] PostGroup request) {
         try {
-            // Create object to send to the group repository
+            // Create request object to send to the group repository
             var createGroupReq = new CreateGroupReq() {
                 OwnerId = request.OwnerId,
                 Name = request.Name,

@@ -1,5 +1,5 @@
 ﻿using Domain;
-using Messages.Group;
+using Messages.Group.Request;
 
 namespace GroupRepository.Repository;
 
@@ -10,10 +10,15 @@ public class GroupRepository : IGroupRepository {
         _context = context;
         CreateDB();
     }
-    public List<Group> GetGroupsFromUser(User user) {
+    
+    public List<Group> GetAllGroups() {
+        return _context.GroupTable.ToList();
+    }
+    
+    public List<Group> GetGroupsFromUser(int userId) {
         try {
             return _context.UserGroupTable
-                .Where(ug => ug.UserId == user.Id)
+                .Where(ug => ug.UserId == userId)
                 .Join(_context.GroupTable,
                     ug => ug.GroupId,
                     g => g.Id,
@@ -23,10 +28,6 @@ public class GroupRepository : IGroupRepository {
         } catch (Exception e) {
             throw new ApplicationException("An error occurred while getting the groups.", e);
         }
-    }
-
-    public List<Group> GetAllGroups() {
-        return _context.GroupTable.ToList();
     }
 
     public Group AddGroup(CreateGroupReq group) {
@@ -50,7 +51,9 @@ public class GroupRepository : IGroupRepository {
         }
     }
     
-    public void AddUserGroup(int userId, int groupId) {
+    
+    // TODO: Implement
+    private void AddUserGroup(int userId, int groupId) {
         try {
             UserGroup userGroup = new UserGroup {
                 UserId = userId,

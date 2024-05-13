@@ -1,4 +1,4 @@
-﻿namespace Messages.Group;
+﻿namespace Messages.Group.Request;
 
 /// <summary>
 /// Request object to create a group. This object contains all necessary information to create a group in repository level.

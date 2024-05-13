@@ -5,12 +5,12 @@
 /// </summary>
 public class PostGroup {
     /// <summary>
-    /// Id of the user that owns the group
+    /// Id of the user that owns the <c>Group</c>
     /// </summary>
     public required int OwnerId { get; set; }
     
     /// <summary>
-    /// Name of the group
+    /// Name of the <c>Group</c>
     /// </summary>
     public required string Name { get; set; }
 }
