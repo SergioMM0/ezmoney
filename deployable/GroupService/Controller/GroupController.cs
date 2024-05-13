@@ -1,4 +1,4 @@
-﻿using Domain;
+﻿using FluentValidation;
 using Messages.Group;
 using Messages.Group.Dto;
 using Messages.Group.Request;
@@ -11,7 +11,16 @@ namespace GroupService.Controller;
 
 [ApiController]
 [Route("group")]
-public class GroupController(RpcClient rpcClient) : ControllerBase {
+public class GroupController : ControllerBase {
+    private readonly RpcClient _rpcClient;
+    private readonly PostGroupValidator _postGroupValidator;
+    private readonly JoinGroupReqValidator _joinGroupValidator;
+    
+    public GroupController(RpcClient rpcClient, PostGroupValidator postGroupValidator, JoinGroupReqValidator joinGroupValidator) {
+        _rpcClient = rpcClient;
+        _postGroupValidator = postGroupValidator;
+        _joinGroupValidator = joinGroupValidator;
+    }
 
     /// <summary>
     /// Retrieves all groups from a user based on userId.
@@ -22,24 +31,28 @@ public class GroupController(RpcClient rpcClient) : ControllerBase {
     /// TODO: Add check for user exists
     /// </summary>
     /// <param name="userId"><see cref="int"/></param>
-    /// <returns>A <see cref="IActionResult"/> containing a <see cref="List{T}"/> of <see cref="GroupResponse"/> objects.</returns>
+    /// <returns>A <see cref="IActionResult"/> containing an <see cref="List{T}"/> of <see cref="GroupResponse"/> objects.</returns>
     [HttpGet("{userId}/groups")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<GroupResponse>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<List<GroupResponse>>> GetAllGroupsOfUser([FromRoute] int userId) {
         try {
+            if (userId <= 0) {
+                return BadRequest("Invalid user id");
+            }
             // Create request object to send to the group repository
             var groupsUserReq = new GroupsUserReq() {
                 UserId = userId
             };
             
             // Fetches all groups from user
-            var response = await rpcClient.CallAsync(Operation.GetGroupsFromUser, groupsUserReq);
+            var response = await _rpcClient.CallAsync(Operation.GetGroupsFromUser, groupsUserReq);
             var groups = JsonConvert.DeserializeObject<List<GroupResponse>>(response);
             return Ok(groups);
         } catch (Exception e) {
             Console.WriteLine(e);
-            return BadRequest("Error getting groups from user");
+            return StatusCodes.Status500InternalServerError("Couldn't deserialize the response");
         }
     }
 
@@ -52,12 +65,20 @@ public class GroupController(RpcClient rpcClient) : ControllerBase {
     /// <br/>-TODO: Add check for user exists
     /// </summary>
     /// <param name="request"><see cref="PostGroup"/></param>
-    /// <returns>A <see cref="IActionResult"/> of <see cref="GroupResponse"/></returns>
+    /// <returns>An <see cref="IActionResult"/> of <see cref="GroupResponse"/></returns>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GroupResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<GroupResponse>> Create([FromBody] PostGroup request) {
         try {
+            var validation = await _postGroupValidator.ValidateAsync(request);
+
+            if (!validation.IsValid) {
+                return BadRequest(validation.Errors);
+            }
+            
             // Create request object to send to the group repository
             var createGroupReq = new CreateGroupReq() {
                 OwnerId = request.OwnerId,
@@ -66,7 +87,7 @@ public class GroupController(RpcClient rpcClient) : ControllerBase {
             };
             
             // Sends the request to the group repository
-            var response = await rpcClient.CallAsync(Operation.CreateGroup, createGroupReq);
+            var response = await _rpcClient.CallAsync(Operation.CreateGroup, createGroupReq);
             
             // Deserializes the response and returns it
             var group = JsonConvert.DeserializeObject<GroupResponse>(response);
@@ -74,7 +95,7 @@ public class GroupController(RpcClient rpcClient) : ControllerBase {
             
         } catch (Exception e) {
             Console.WriteLine(e);
-            return BadRequest("Error creating group");
+            return StatusCodes.Status500InternalServerError("Couldn't deserialize the response");
         }
     }
 
@@ -83,6 +104,7 @@ public class GroupController(RpcClient rpcClient) : ControllerBase {
     /// <br/>- Sends a request through RPC to:
     /// <br/>- GroupRepository
     /// <br/>- UserRepository
+    /// TODO: Add check for user exists
     /// </summary>
     /// <param name="request"><see cref="JoinGroupReq"/></param>
     [HttpPost("join")]
@@ -90,8 +112,14 @@ public class GroupController(RpcClient rpcClient) : ControllerBase {
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult Join([FromBody] JoinGroupReq request) {
+    public async Task<IActionResult> Join([FromBody] JoinGroupReq request) {
         try {
+            var validation = await _joinGroupValidator.ValidateAsync(request);
+
+            if (!validation.IsValid) {
+                return BadRequest(validation.Errors);
+            }
+            
             // Create request object to send to the group repository
             var joinGroupReq = new JoinGroupReq() {
                 UserId = request.UserId,
@@ -99,14 +127,21 @@ public class GroupController(RpcClient rpcClient) : ControllerBase {
             };
             
             // Sends the request to the group repository
-            var response = rpcClient.CallAsync(Operation.JoinGroup, joinGroupReq);
+            var response = await _rpcClient.CallAsync(Operation.JoinGroup, joinGroupReq);
+            var group = JsonConvert.DeserializeObject<ApiResponse>(response);
             
-            
-            return NoContent();
-            
+            if(group!.Success) {
+                return NoContent();
+            }
+            switch (group.ErrorMessage) {
+                case "Group not found":
+                    return NotFound("Group not found");
+                default:
+                    return BadRequest("Error joining group");
+            }
         } catch (Exception e) {
             Console.WriteLine(e);
-            return StatusCodes.Status500InternalServerError("Error joining group");
+            return StatusCodes.Status500InternalServerError("Couldn't deserialize the response data");
         }
     }
     

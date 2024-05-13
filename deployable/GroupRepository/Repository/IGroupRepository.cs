@@ -4,7 +4,9 @@ using Messages.Group.Request;
 namespace GroupRepository.Repository;
 
 public interface IGroupRepository {
-    public List<Group> GetAllGroups();
-    public List<Group> GetGroupsFromUser(int userId);
-    public Group AddGroup(CreateGroupReq group);
+    List<Group> GetAllGroups();
+    List<Group> GetGroupsFromUser(int userId);
+    Group? GetGroupByToken(string token);
+    Group AddGroup(CreateGroupReq group);
+    void AddUserToGroup(int userId, int groupId);
 }

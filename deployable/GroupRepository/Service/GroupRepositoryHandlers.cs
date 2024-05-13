@@ -1,5 +1,4 @@
-﻿using Domain;
-using Messages.Group;
+﻿using Messages.Group;
 using Messages.Group.Request;
 using Newtonsoft.Json;
 using RPC;
@@ -60,19 +59,20 @@ public class GroupRepositoryHandlers : IRequestHandler {
             return JsonConvert.SerializeObject(response);
         }
     }
-    
+
     private string HandleJoinGroup(object data) {
+        var response = new ApiResponse();
         try {
             var request = JsonConvert.DeserializeObject<JoinGroupReq>(data.ToString()!);
-            var groups = _groupRepositoryService.JoinGroup(request);
-            var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(groups) };
-            return JsonConvert.SerializeObject(response);
+            _groupRepositoryService.JoinGroup(request!);
+            response.Success = true;
         } catch (Exception e) {
-            var response = new ApiResponse { Success = false, ErrorMessage = e.Message };
-            return JsonConvert.SerializeObject(response);
+            response.Success = false;
+            response.ErrorMessage = e.Message;
         }
+        return JsonConvert.SerializeObject(response);
     }
-    
+
     public string HandleRequest(Operation operation, object data) {
         return ProcessRequest(operation, data);
     }

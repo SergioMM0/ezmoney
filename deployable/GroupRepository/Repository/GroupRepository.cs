@@ -29,6 +29,9 @@ public class GroupRepository : IGroupRepository {
             throw new ApplicationException("An error occurred while getting the groups.", e);
         }
     }
+    public Group? GetGroupByToken(string token) {
+        return _context.GroupTable.FirstOrDefault(g => g.Token == token);
+    }
 
     public Group AddGroup(CreateGroupReq group) {
         // Map DTO into BE object
@@ -42,7 +45,7 @@ public class GroupRepository : IGroupRepository {
             _context.SaveChanges();
             
             // Add UserGroup object to DB to link the user to the group
-            AddUserGroup(group.OwnerId, newGroup.Id);
+            AddUserToGroup(group.OwnerId, newGroup.Id);
             
             // Return the newly created group
             return newGroup;
@@ -50,12 +53,10 @@ public class GroupRepository : IGroupRepository {
             throw new ApplicationException("An error occurred while adding the group.", ex);
         }
     }
-    
-    
-    // TODO: Implement
-    private void AddUserGroup(int userId, int groupId) {
+
+    public void AddUserToGroup(int userId, int groupId) {
         try {
-            UserGroup userGroup = new UserGroup {
+            var userGroup = new UserGroup {
                 UserId = userId,
                 GroupId = groupId
             };

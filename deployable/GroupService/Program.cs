@@ -9,6 +9,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
+
 // Configure topics
 builder.Services.AddSingleton<IConnectionFactoryProvider, RpcFactory>();
 builder.Services.Configure<Topics>(builder.Configuration.GetSection("RPCMessages"));

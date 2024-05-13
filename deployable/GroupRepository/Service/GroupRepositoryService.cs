@@ -1,5 +1,4 @@
-﻿using Domain;
-using GroupRepository.Repository;
+﻿using GroupRepository.Repository;
 using Messages.Group;
 using Messages.Group.Request;
 using Messages.Group.Response;
@@ -42,5 +41,14 @@ public class GroupRepositoryService {
             Name = group.Name,
             Token = group.Token
         };
+    }
+    public void JoinGroup(JoinGroupReq request) {
+        var group = _groupRepository.GetGroupByToken(request.Token);
+
+        if (group is null) {
+            throw new ApplicationException("Group not found");
+        }
+        
+        _groupRepository.AddUserToGroup(request.UserId, group.Id);
     }
 }
