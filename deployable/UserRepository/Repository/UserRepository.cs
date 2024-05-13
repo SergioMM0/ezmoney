@@ -30,7 +30,7 @@ public class UserRepository : IUserRepository {
 
     }
 
-    public User LoginUser(User user) {
+    public User GetUserByPhoneNumber(User user) {
         try {
             return _context.UserTable.FirstOrDefault(u => u.PhoneNumber == user.PhoneNumber);
         } catch (Exception ex) {

@@ -3,7 +3,7 @@
 public enum Operation {
     CreateUser,
     GetAllUsers,
-    LoginUser,
+    GetUserByPhoneNumber,
     CreateGroup,
     GetAllGroups,
     GetGroupsFromUser,

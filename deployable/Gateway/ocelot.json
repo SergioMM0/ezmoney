@@ -3,11 +3,11 @@
     {
       "UpstreamPathTemplate": "/login",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/user/login", 
+      "DownstreamPathTemplate": "/auth/login", 
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "user-service",
+          "Host": "auth-service",
           "Port": 8080
         }
       ]
@@ -15,14 +15,29 @@
     {
       "UpstreamPathTemplate": "/register",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/user/register",
+      "DownstreamPathTemplate": "/auth/register",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "user-service",
+          "Host": "auth-service",
           "Port": 8080
         }
       ]
+    },
+    {
+      "UpstreamPathTemplate": "/users/phone/{phoneNumber}",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/user/phone/{phoneNumber}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "auth-service",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
     {
       "UpstreamPathTemplate": "/users/{userId}/groups",
@@ -34,7 +49,10 @@
           "Host": "group-service",
           "Port": 8080
         }
-      ]
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
     {
       "UpstreamPathTemplate": "/groups",
@@ -46,7 +64,10 @@
           "Host": "group-service",
           "Port": 8080
         }
-      ]
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
     {
       "UpstreamPathTemplate": "/groups/join",
@@ -58,7 +79,10 @@
           "Host": "group-service",
           "Port": 8080
         }
-      ]
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
     {
       "UpstreamPathTemplate": "/groups/{groupId}/expenses",
@@ -70,7 +94,10 @@
           "Host": "expense-service",
           "Port": 8080
         }
-      ]
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
     {
       "UpstreamPathTemplate": "/groups/{groupId}/expenses",
@@ -82,7 +109,10 @@
           "Host": "expense-service",
           "Port": 8080
         }
-      ]
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     }
   ]
 }

@@ -14,44 +14,42 @@ public class UserController : ControllerBase {
         _rpcClient = rpcClient;
     }
     /// <summary>
-    /// Attempts to log in a user, returning a 200 OK if successful, 400 Bad Request if not
+    /// Attempts to get a user by phone number, returning a 200 OK if successful, 400 Bad Request if not
     /// Sends a petition to the UserRepository to check if the user exists through RabbitMQ
     /// </summary>
-    /// <param name="request"></param>
+    /// <param name="phoneNumber"></param>
     /// <returns>{IActionResult}</returns>
-    [HttpPost("login")]
-    public async Task<ActionResult<UserResponse>> Login([FromBody] LoginUserReq request) {
-        if (!string.IsNullOrEmpty(request.PhoneNumber)) {
-            try {
-                var response = await _rpcClient.CallAsync(Operation.LoginUser,
-                    new User { Name = "", PhoneNumber = request.PhoneNumber });
-                if (response.Contains("null"))
-                    return BadRequest("User not found");
-                UserResponse user = JsonConvert.DeserializeObject<UserResponse>(response);
-                return Ok(user);
-            } catch (Exception e) {
-                Console.WriteLine(e);
-                return BadRequest("Error logging in: " + e.Message);
-            }
+    [HttpGet("phone/{phoneNumber}")]
+    public async Task<ActionResult<UserResponse>> GetByPhoneNumber([FromRoute] string phoneNumber) {
+        Console.WriteLine("Getting user by phone number: " + phoneNumber);
+        try {
+            var response = await _rpcClient.CallAsync(Operation.GetUserByPhoneNumber,
+                new User { Name = "", PhoneNumber = phoneNumber });
+            if (response.Contains("null"))
+                return NotFound("User not found");
+            UserResponse user = JsonConvert.DeserializeObject<UserResponse>(response);
+            return Ok(user);
+        } catch (Exception e) {
+            Console.WriteLine(e);
+            return BadRequest("Error logging in: " + e.Message);
         }
-        return BadRequest("Invalid phone number");
     }
 
     /// <summary>
-    /// Attempts to register a user in the system, returning a 200 OK if successful, 400 Bad Request if not
+    /// Attempts to create a user in the system, returning a 200 OK if successful, 400 Bad Request if not
     /// Sends a petition to the UserRepository through RabbitMQ
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterUserReq request) {
+    [HttpPost("create")]
+    public async Task<IActionResult> Create([FromBody] CreateUserReq request) {
         try {
             var response = await _rpcClient.CallAsync(Operation.CreateUser, new User { Name = request.Name, PhoneNumber = request.PhoneNumber });
             UserResponse user = JsonConvert.DeserializeObject<UserResponse>(response);
             return Ok(user);
         } catch (Exception e) {
             Console.WriteLine(e);
-            return BadRequest("Error registering user");
+            return BadRequest("Error creating user");
         }
 
     }

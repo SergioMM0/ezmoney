@@ -13,7 +13,7 @@ public class UserRepositoryHandlers : IRequestHandler {
         _registry = new HandlerRegistry();
         _registry.RegisterHandler(Operation.CreateUser, HandleCreateUser);
         _registry.RegisterHandler(Operation.GetAllUsers, HandleGetAllUsers);
-        _registry.RegisterHandler(Operation.LoginUser, HandleLoginUser);
+        _registry.RegisterHandler(Operation.GetUserByPhoneNumber, HandleGetUserByPhoneNumber);
         _userRepositoryService = userRepositoryService;
         // Add more handlers as needed
     }
@@ -41,11 +41,11 @@ public class UserRepositoryHandlers : IRequestHandler {
         }
     }
 
-    private string HandleLoginUser(object data) {
+    private string HandleGetUserByPhoneNumber(object data) {
         try {
             var user = JsonConvert.DeserializeObject<User>(data.ToString()!);
-            var userLogin = _userRepositoryService.LoginUser(user!);
-            var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(userLogin) };
+            var userWithPhoneNumber = _userRepositoryService.GetUserByPhoneNumber(user!);
+            var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(userWithPhoneNumber) };
             return JsonConvert.SerializeObject(response);
         } catch (Exception ex) {
             var response = new ApiResponse { Success = false, ErrorMessage = ex.Message };
@@ -64,7 +64,7 @@ public class UserRepositoryHandlers : IRequestHandler {
                     return ProcessRequest(operation, data);
                 case Operation.GetAllUsers:
                     return ProcessRequest(operation, data);
-                case Operation.LoginUser:
+                case Operation.GetUserByPhoneNumber:
                     return ProcessRequest(operation, data);
                 default:
                     return JsonConvert.SerializeObject(new { error = "Unknown operation" });
