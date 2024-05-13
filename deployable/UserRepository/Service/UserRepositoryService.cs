@@ -19,7 +19,7 @@ public class UserRepositoryService {
         return _userRepository.GetAllUsers();
     }
 
-    public User LoginUser(User user) {
-        return _userRepository.LoginUser(user);
+    public User GetUserByPhoneNumber(User user) {
+        return _userRepository.GetUserByPhoneNumber(user);
     }
 }
