@@ -25,6 +25,21 @@
       ]
     },
     {
+      "UpstreamPathTemplate": "/users/phone/{phoneNumber}",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/user/phone/{phoneNumber}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "auth-service",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
       "UpstreamPathTemplate": "/users/{userId}/groups",
       "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/group/{userId}/groups",
