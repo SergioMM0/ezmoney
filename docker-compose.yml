@@ -10,6 +10,7 @@ services:
       - user-service
       - group-service
       - expense-service
+      - auth-service
   user-service:
     image: user-service
     build:
@@ -23,6 +24,15 @@ services:
       - RABBITMQ_VIRTUALHOST=${RABBITMQ_VIRTUALHOST}
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+  auth-service:
+    image: auth-service
+    build:
+      context: .
+      dockerfile: deployable/AuthService/Dockerfile
+    ports:
+      - "1500:8080"
+    depends_on: 
+      - user-service
   group-service:
     image: group-service
     build:

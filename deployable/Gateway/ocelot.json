@@ -3,11 +3,11 @@
     {
       "UpstreamPathTemplate": "/login",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/user/login", 
+      "DownstreamPathTemplate": "/auth/login", 
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "user-service",
+          "Host": "auth-service",
           "Port": 8080
         }
       ]
@@ -15,11 +15,11 @@
     {
       "UpstreamPathTemplate": "/register",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/user/register",
+      "DownstreamPathTemplate": "/auth/register",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "user-service",
+          "Host": "auth-service",
           "Port": 8080
         }
       ]
