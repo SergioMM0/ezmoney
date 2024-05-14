@@ -1,5 +1,6 @@
 ﻿using Messages.Group;
 using Messages.Group.Request;
+using Messages.Group.Response;
 using Newtonsoft.Json;
 using RPC;
 using RPC.Interfaces;
@@ -66,6 +67,7 @@ public class GroupRepositoryHandlers : IRequestHandler {
             var request = JsonConvert.DeserializeObject<JoinGroupReq>(data.ToString()!);
             _groupRepositoryService.JoinGroup(request!);
             response.Success = true;
+            response.Data = "Joined group successfully";
         } catch (Exception e) {
             response.Success = false;
             response.ErrorMessage = e.Message;

@@ -1,5 +1,6 @@
 ﻿using Domain;
 using Messages.Group.Request;
+using Microsoft.EntityFrameworkCore;
 
 namespace GroupRepository.Repository;
 
@@ -12,7 +13,7 @@ public class GroupRepository : IGroupRepository {
     }
 
     public List<Group> GetAllGroups() {
-        return _context.GroupTable.ToList();
+        return _context.GroupTable.AsNoTracking().ToList();
     }
 
     public List<Group> GetGroupsFromUser(int userId) {
@@ -24,13 +25,19 @@ public class GroupRepository : IGroupRepository {
                     g => g.Id,
                     (ug, g) => g)
                 .Distinct()
+                .AsNoTracking()
                 .ToList();
         } catch (Exception e) {
             throw new ApplicationException("An error occurred while getting the groups.", e);
         }
     }
+    
     public Group? GetGroupByToken(string token) {
-        return _context.GroupTable.FirstOrDefault(g => g.Token == token);
+        var group = _context.GroupTable.AsNoTracking().FirstOrDefault(g => g.Token == token);
+        if (group != null) {
+            _context.Entry(group).State = EntityState.Detached;
+        }
+        return group;
     }
 
     public Group AddGroup(CreateGroupReq group) {

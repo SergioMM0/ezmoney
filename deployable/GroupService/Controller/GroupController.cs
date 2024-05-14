@@ -130,7 +130,7 @@ public class GroupController : ControllerBase {
     /// </summary>
     /// <param name="request"><see cref="JoinGroupReq"/></param>
     [HttpPost("join")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof (string))]
@@ -144,17 +144,9 @@ public class GroupController : ControllerBase {
             
             // Sends the request to the group repository
             var response = await _rpcClient.CallAsync(Operation.JoinGroup, joinGroupReq);
-            var group = JsonConvert.DeserializeObject<ApiResponse>(response);
+            var contentString = JsonConvert.DeserializeObject<string>(response);
             
-            if(group!.Success) {
-                return NoContent();
-            }
-            switch (group.ErrorMessage) {
-                case "Group not found":
-                    return NotFound("Group not found");
-                default:
-                    return BadRequest("Error joining group");
-            }
+            return Ok(contentString);
         } catch (Exception e) {
             Console.WriteLine(e);
             return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
