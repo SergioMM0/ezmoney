@@ -9,6 +9,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
+// Add HTTP client
+builder.Services.AddHttpClient();
+
 
 // Configure topics
 builder.Services.AddSingleton<IConnectionFactoryProvider, RpcFactory>();

@@ -1,5 +1,4 @@
-﻿using FluentValidation;
-using Messages.Group;
+﻿using Messages.Group;
 using Messages.Group.Dto;
 using Messages.Group.Request;
 using Messages.Group.Response;
@@ -15,11 +14,14 @@ public class GroupController : ControllerBase {
     private readonly RpcClient _rpcClient;
     private readonly PostGroupValidator _postGroupValidator;
     private readonly JoinGroupReqValidator _joinGroupValidator;
+    private readonly IHttpClientFactory _clientFactory;
     
-    public GroupController(RpcClient rpcClient, PostGroupValidator postGroupValidator, JoinGroupReqValidator joinGroupValidator) {
+    public GroupController(RpcClient rpcClient, PostGroupValidator postGroupValidator,
+        JoinGroupReqValidator joinGroupValidator, IHttpClientFactory clientFactory) {
         _rpcClient = rpcClient;
         _postGroupValidator = postGroupValidator;
         _joinGroupValidator = joinGroupValidator;
+        _clientFactory = clientFactory;
     }
 
     /// <summary>
@@ -34,25 +36,27 @@ public class GroupController : ControllerBase {
     /// <returns>A <see cref="IActionResult"/> containing an <see cref="List{T}"/> of <see cref="GroupResponse"/> objects.</returns>
     [HttpGet("{userId}/groups")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<GroupResponse>))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof (string))]
     public async Task<ActionResult<List<GroupResponse>>> GetAllGroupsOfUser([FromRoute] int userId) {
         try {
             if (userId <= 0) {
                 return BadRequest("Invalid user id");
             }
+            
             // Create request object to send to the group repository
             var groupsUserReq = new GroupsUserReq() {
                 UserId = userId
             };
             
             // Fetches all groups from user
-            var response = await _rpcClient.CallAsync(Operation.GetGroupsFromUser, groupsUserReq);
-            var groups = JsonConvert.DeserializeObject<List<GroupResponse>>(response);
+            var groupResponse = await _rpcClient.CallAsync(Operation.GetGroupsFromUser, groupsUserReq);
+            var groups = JsonConvert.DeserializeObject<List<GroupResponse>>(groupResponse);
             return Ok(groups);
         } catch (Exception e) {
             Console.WriteLine(e);
-            return StatusCodes.Status500InternalServerError("Couldn't deserialize the response");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
         }
     }
 
@@ -95,7 +99,7 @@ public class GroupController : ControllerBase {
             
         } catch (Exception e) {
             Console.WriteLine(e);
-            return StatusCodes.Status500InternalServerError("Couldn't deserialize the response");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
         }
     }
 
@@ -141,7 +145,7 @@ public class GroupController : ControllerBase {
             }
         } catch (Exception e) {
             Console.WriteLine(e);
-            return StatusCodes.Status500InternalServerError("Couldn't deserialize the response data");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
         }
     }
     
