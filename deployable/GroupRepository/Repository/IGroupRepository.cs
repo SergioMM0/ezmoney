@@ -1,5 +1,6 @@
 ﻿using Domain;
 using Messages.Group.Request;
+using Messages.Group.Response;
 
 namespace GroupRepository.Repository;
 
@@ -9,4 +10,5 @@ public interface IGroupRepository {
     Group? GetGroupByToken(string token);
     Group AddGroup(CreateGroupReq group);
     void JoinGroup(int requestUserId, string requestToken);
+    public Group GetGroupById(GroupByIdRequest groupId);
 }

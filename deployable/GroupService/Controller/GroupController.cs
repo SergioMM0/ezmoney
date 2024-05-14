@@ -54,13 +54,13 @@ public class GroupController : ControllerBase {
         }
     }
     
-    /*
+    
     [HttpGet("{groupId}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GroupResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof (string))]
-    public async Task<ActionResult<List<GroupResponse>>> GetById([FromRoute] int groupId) {
+    public async Task<ActionResult<GroupResponse>> GetById([FromRoute] int groupId) {
         try {
             if (groupId <= 0) {
                 return BadRequest("Invalid user id");
@@ -68,20 +68,20 @@ public class GroupController : ControllerBase {
             
             // Create request object to send to the group repository
             var groupRequest = new GroupByIdRequest() {
-                UserId = groupId
+                GroupId = groupId
             };
             
-            // Fetches all groups from user
-            var groupResponse = await _rpcClient.CallAsync(Operation.GetGroupsFromUser, groupRequest);
-            var groups = JsonConvert.DeserializeObject<List<GroupResponse>>(groupResponse);
-            return Ok(groups);
+            // Fetch the group
+            var groupResponse = await _rpcClient.CallAsync(Operation.GetGroupById, groupRequest);
+            var group = JsonConvert.DeserializeObject<GroupResponse>(groupResponse);
+            return Ok(group);
         } catch (Exception e) {
             Console.WriteLine(e);
             return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
         }
     }
     
-    */
+    
 
     /// <summary>
     /// Process the request to create a new group.
