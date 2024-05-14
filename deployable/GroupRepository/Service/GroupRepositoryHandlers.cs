@@ -1,5 +1,6 @@
-﻿using Domain;
-using Messages.Group;
+﻿using Messages.Group;
+using Messages.Group.Request;
+using Messages.Group.Response;
 using Newtonsoft.Json;
 using RPC;
 using RPC.Interfaces;
@@ -16,19 +17,20 @@ public class GroupRepositoryHandlers : IRequestHandler {
         _registry = new HandlerRegistry();
         _registry.RegisterHandler(Operation.CreateGroup, HandleCreateGroup);
         _registry.RegisterHandler(Operation.GetAllGroups, HandleGetAllGroups);
-        _registry.RegisterHandler(Operation.GetGroupFromUser, HandleGetGroupFromUser);
+        _registry.RegisterHandler(Operation.GetGroupsFromUser, HandleGetGroupsFromUser);
+        _registry.RegisterHandler(Operation.JoinGroup, HandleJoinGroup);
         _groupRepositoryService = groupRepositoryService;
     }
 
     private string ProcessRequest(Operation operation, object data) {
         return _registry.HandleRequest(operation, data);
     }
-
-    private string HandleGetGroupFromUser(object data) {
+    
+    private string HandleCreateGroup(object data) {
         try {
-            var user = JsonConvert.DeserializeObject<User>(data.ToString()!);
-            var groups = _groupRepositoryService.GetGroupsFromUser(user!);
-            var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(groups) };
+            var groupDto = JsonConvert.DeserializeObject<CreateGroupReq>(data.ToString()!);
+            var groupAdded = _groupRepositoryService.Add(groupDto!);
+            var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(groupAdded) };
             return JsonConvert.SerializeObject(response);
         } catch (Exception e) {
             var response = new ApiResponse { Success = false, ErrorMessage = e.Message };
@@ -46,17 +48,31 @@ public class GroupRepositoryHandlers : IRequestHandler {
             return JsonConvert.SerializeObject(response);
         }
     }
-
-    private string HandleCreateGroup(object data) {
+    
+    private string HandleGetGroupsFromUser(object data) {
         try {
-            var groupDto = JsonConvert.DeserializeObject<GroupDto>(data.ToString()!);
-            var groupAdded = _groupRepositoryService.AddGroup(groupDto!);
-            var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(groupAdded) };
+            var request = JsonConvert.DeserializeObject<GroupsUserReq>(data.ToString()!);
+            var groups = _groupRepositoryService.GetGroupsFromUser(request!.UserId);
+            var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(groups) };
             return JsonConvert.SerializeObject(response);
         } catch (Exception e) {
             var response = new ApiResponse { Success = false, ErrorMessage = e.Message };
             return JsonConvert.SerializeObject(response);
         }
+    }
+
+    private string HandleJoinGroup(object data) {
+        var response = new ApiResponse();
+        try {
+            var request = JsonConvert.DeserializeObject<JoinGroupReq>(data.ToString()!);
+            _groupRepositoryService.JoinGroup(request!);
+            response.Success = true;
+            response.Data = JsonConvert.SerializeObject("Successfully joined group.");
+        } catch (Exception e) {
+            response.Success = false;
+            response.ErrorMessage = e.Message;
+        }
+        return JsonConvert.SerializeObject(response);
     }
 
     public string HandleRequest(Operation operation, object data) {

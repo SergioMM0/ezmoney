@@ -6,9 +6,10 @@ public enum Operation {
     GetUserByPhoneNumber,
     CreateGroup,
     GetAllGroups,
-    GetGroupFromUser,
+    GetGroupsFromUser,
     CreateExpense,
     GetExpensesFromGroup,
     GetExpensesFromUser,
-    GetExpensesFromUserInGroup
+    GetExpensesFromUserInGroup,
+    JoinGroup
 }

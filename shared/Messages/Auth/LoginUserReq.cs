@@ -1,4 +1,4 @@
-﻿namespace Messages.User;
+﻿namespace Messages.Auth;
 
 /// <summary>
 /// DTO for logging in a user

@@ -1,11 +1,12 @@
 ﻿using Domain;
-using Messages.Group;
+using Messages.Group.Request;
 
 namespace GroupRepository.Repository;
 
 public interface IGroupRepository {
-    public List<Group> GetGroupsFromUser(User user);
-    public List<Group> GetAllGroups();
-    public Group AddGroup(GroupDto group);
-    public void AddUserGroup(int userId, int groupId);
+    List<Group> GetAllGroups();
+    List<Group> GetGroupsFromUser(int userId);
+    Group? GetGroupByToken(string token);
+    Group AddGroup(CreateGroupReq group);
+    void JoinGroup(int requestUserId, string requestToken);
 }

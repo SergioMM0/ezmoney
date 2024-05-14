@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Messages.Auth;
 using Messages.User;
 using Microsoft.AspNetCore.Authentication;
 
