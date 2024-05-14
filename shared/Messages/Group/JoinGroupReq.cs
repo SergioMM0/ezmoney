@@ -1,7 +1,4 @@
-﻿using FluentValidation;
-using Messages.Group.Dto;
-
-namespace Messages.Group;
+﻿namespace Messages.Group;
 
 /// <summary>
 /// DTO for user joining a group
@@ -16,17 +13,4 @@ public class JoinGroupReq {
     /// The token of the group that the user wants to join
     /// </summary>
     public required string Token { get; set; }
-}
-
-public class JoinGroupReqValidator : AbstractValidator<JoinGroupReq> {
-    public JoinGroupReqValidator() {
-        RuleFor(x => x.UserId)
-            .GreaterThan(0)
-            .WithMessage("User ID must be greater than 0");
-
-        RuleFor(x => x.Token)
-            .NotEmpty()
-            .Length(36)
-            .WithMessage("Invalid token");
-    }
 }

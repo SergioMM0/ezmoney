@@ -1,4 +1,5 @@
-﻿using Messages.Group;
+﻿using FluentValidation;
+using Messages.Group;
 using Messages.Group.Dto;
 using Messages.Group.Request;
 using Messages.Group.Response;
@@ -12,16 +13,9 @@ namespace GroupService.Controller;
 [Route("group")]
 public class GroupController : ControllerBase {
     private readonly RpcClient _rpcClient;
-    private readonly PostGroupValidator _postGroupValidator;
-    private readonly JoinGroupReqValidator _joinGroupValidator;
-    private readonly IHttpClientFactory _clientFactory;
     
-    public GroupController(RpcClient rpcClient, PostGroupValidator postGroupValidator,
-        JoinGroupReqValidator joinGroupValidator, IHttpClientFactory clientFactory) {
+    public GroupController(RpcClient rpcClient) {
         _rpcClient = rpcClient;
-        _postGroupValidator = postGroupValidator;
-        _joinGroupValidator = joinGroupValidator;
-        _clientFactory = clientFactory;
     }
 
     /// <summary>
@@ -101,16 +95,11 @@ public class GroupController : ControllerBase {
     /// <returns>An <see cref="IActionResult"/> of <see cref="GroupResponse"/></returns>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GroupResponse))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof (string))]
     public async Task<ActionResult<GroupResponse>> Create([FromBody] PostGroup request) {
         try {
-            var validation = await _postGroupValidator.ValidateAsync(request);
-
-            if (!validation.IsValid) {
-                return BadRequest(validation.Errors);
-            }
             
             // Create request object to send to the group repository
             var createGroupReq = new CreateGroupReq() {
@@ -142,17 +131,11 @@ public class GroupController : ControllerBase {
     /// <param name="request"><see cref="JoinGroupReq"/></param>
     [HttpPost("join")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof (string))]
     public async Task<IActionResult> Join([FromBody] JoinGroupReq request) {
         try {
-            var validation = await _joinGroupValidator.ValidateAsync(request);
-
-            if (!validation.IsValid) {
-                return BadRequest(validation.Errors);
-            }
-            
             // Create request object to send to the group repository
             var joinGroupReq = new JoinGroupReq() {
                 UserId = request.UserId,
