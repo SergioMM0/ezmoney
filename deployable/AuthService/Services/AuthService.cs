@@ -7,10 +7,12 @@ namespace AuthService.Services;
 public class AuthService {
     private readonly JWTTokenService _jwtTokenService;
     private readonly AuthServiceConfiguration _config;
+    private readonly HttpClient _client;
     
-    public AuthService(JWTTokenService jwtTokenService, AuthServiceConfiguration config) {
+    public AuthService(JWTTokenService jwtTokenService, AuthServiceConfiguration config, HttpClient client) {
         _jwtTokenService = jwtTokenService;
         _config = config;
+        _client = client;
     }
     
     public async Task<AuthenticationToken> Register(RegisterUserReq request) {
@@ -21,8 +23,7 @@ public class AuthService {
         };
         
         //2. Send HTTP request to user service to register (create) a user
-        var client = new HttpClient();
-        var response = await client.PostAsJsonAsync(_config.CreateUserUrl, createUserReq);
+        var response = await _client.PostAsJsonAsync(_config.CreateUserUrl, createUserReq);
         if (!response.IsSuccessStatusCode) {
             throw new Exception("Error creating user. User service returned: " + response.StatusCode);
         }
@@ -37,8 +38,7 @@ public class AuthService {
     
     public async Task<AuthenticationToken> Login(LoginUserReq request) {
         //1. Send HTTP request to user service to login a user
-        var client = new HttpClient();
-        var response = await client.GetAsync(_config.GetUserByPhoneNumberUrl + request.PhoneNumber);
+        var response = await _client.GetAsync(_config.GetUserByPhoneNumberUrl + request.PhoneNumber);
         if (!response.IsSuccessStatusCode) {
             throw new Exception("Error logging in. User service returned: " + response.StatusCode);
         }
