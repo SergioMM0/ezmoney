@@ -10,11 +10,11 @@ public class GroupRepository : IGroupRepository {
         _context = context;
         RecreateDB();
     }
-    
+
     public List<Group> GetAllGroups() {
         return _context.GroupTable.ToList();
     }
-    
+
     public List<Group> GetGroupsFromUser(int userId) {
         try {
             return _context.UserGroupTable
@@ -43,10 +43,10 @@ public class GroupRepository : IGroupRepository {
             // Add group object to the DB
             _context.GroupTable.Add(newGroup);
             _context.SaveChanges();
-            
+
             // Add UserGroup object to DB to link the user to the group
             AddUserToGroup(group.OwnerId, newGroup.Id);
-            
+
             // Return the newly created group
             return newGroup;
         } catch (Exception ex) {
@@ -72,6 +72,7 @@ public class GroupRepository : IGroupRepository {
     private void RecreateDB() {
         try {
             Console.WriteLine("Creating database...");
+            _context.Database.EnsureDeleted();
             _context.Database.EnsureCreated();
         } catch (Exception e) {
             throw new ApplicationException("An error occurred while creating the database.", e);
@@ -79,4 +80,5 @@ public class GroupRepository : IGroupRepository {
     }
 
     #endregion
+
 }
