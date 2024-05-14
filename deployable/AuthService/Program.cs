@@ -18,6 +18,8 @@ builder.Services.AddSingleton<JWTTokenService>();
 
 builder.Services.AddSingleton<AuthService.Services.AuthService>();
 
+builder.Services.AddHttpClient<AuthService.Services.AuthService>();
+
 builder.Services.AddControllers();
 
 var app = builder.Build();
