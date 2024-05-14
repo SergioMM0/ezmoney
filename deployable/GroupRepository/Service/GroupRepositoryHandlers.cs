@@ -18,9 +18,12 @@ public class GroupRepositoryHandlers : IRequestHandler {
         _registry.RegisterHandler(Operation.CreateGroup, HandleCreateGroup);
         _registry.RegisterHandler(Operation.GetAllGroups, HandleGetAllGroups);
         _registry.RegisterHandler(Operation.GetGroupsFromUser, HandleGetGroupsFromUser);
+        _registry.RegisterHandler(Operation.GetGroupById, HandleGetGroupById);
         _registry.RegisterHandler(Operation.JoinGroup, HandleJoinGroup);
         _groupRepositoryService = groupRepositoryService;
     }
+
+    
 
     private string ProcessRequest(Operation operation, object data) {
         return _registry.HandleRequest(operation, data);
@@ -37,7 +40,17 @@ public class GroupRepositoryHandlers : IRequestHandler {
             return JsonConvert.SerializeObject(response);
         }
     }
-
+    private string HandleGetGroupById(object data) {
+        try {
+            var groupId = JsonConvert.DeserializeObject<GroupByIdRequest>(data.ToString()!);
+            var groupSearched = _groupRepositoryService.GetGroupById(groupId);
+            var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(groupSearched) };
+            return JsonConvert.SerializeObject(response);
+        } catch (Exception e) {
+            var response = new ApiResponse { Success = false, ErrorMessage = e.Message };
+            return JsonConvert.SerializeObject(response);
+        }
+    }
     private string HandleGetAllGroups(object data) {
         try {
             var groups = _groupRepositoryService.GetAllGroups();

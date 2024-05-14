@@ -46,4 +46,13 @@ public class GroupRepositoryService {
     public void JoinGroup(JoinGroupReq request) {
         _groupRepository.JoinGroup(request.UserId, request.Token);
     }
+
+    public GroupResponse GetGroupById(GroupByIdRequest groupSearched) {
+        var group = _groupRepository.GetGroupById(groupSearched);
+        return new GroupResponse {
+            Id = group.Id,
+            Name = group.Name,
+            Token = group.Token
+        };
+    }
 }

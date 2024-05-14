@@ -1,5 +1,6 @@
 ﻿using Domain;
 using Messages.Group.Request;
+using Messages.Group.Response;
 using Microsoft.EntityFrameworkCore;
 
 namespace GroupRepository.Repository;
@@ -72,6 +73,15 @@ public class GroupRepository : IGroupRepository {
             
         } catch (Exception e) {
             throw new ApplicationException("An error occurred while joining the group.", e);
+        }
+    }
+
+    public Group GetGroupById(GroupByIdRequest group) {
+       
+        try {
+            return _context.GroupTable.AsNoTracking().FirstOrDefault(g => g.Id == group.GroupId) ?? throw new ApplicationException("Group not found.");
+        } catch (Exception e) {
+            throw new ApplicationException("An error occurred while getting the group.", e);
         }
     }
 

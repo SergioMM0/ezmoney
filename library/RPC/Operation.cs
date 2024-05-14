@@ -7,6 +7,7 @@ public enum Operation {
     CreateGroup,
     GetAllGroups,
     GetGroupsFromUser,
+    GetGroupById,
     CreateExpense,
     GetExpensesFromGroup,
     GetExpensesFromUser,
