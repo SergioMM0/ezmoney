@@ -60,6 +60,20 @@ public class GroupRepository : IGroupRepository {
             throw new ApplicationException("An error occurred while adding the group.", ex);
         }
     }
+    public void JoinGroup(int requestUserId, string requestToken) {
+        try {
+            var group = GetGroupByToken(requestToken);
+            
+            if (group == null) {
+                throw new ApplicationException("Group not found.");
+            }
+            
+            AddUserToGroup(requestUserId, group.Id);
+            
+        } catch (Exception e) {
+            throw new ApplicationException("An error occurred while joining the group.", e);
+        }
+    }
 
     public void AddUserToGroup(int userId, int groupId) {
         try {

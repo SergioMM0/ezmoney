@@ -67,7 +67,7 @@ public class GroupRepositoryHandlers : IRequestHandler {
             var request = JsonConvert.DeserializeObject<JoinGroupReq>(data.ToString()!);
             _groupRepositoryService.JoinGroup(request!);
             response.Success = true;
-            response.Data = "Joined group successfully";
+            response.Data = JsonConvert.SerializeObject("Successfully joined group.");
         } catch (Exception e) {
             response.Success = false;
             response.ErrorMessage = e.Message;

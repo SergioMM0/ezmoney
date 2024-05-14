@@ -8,5 +8,5 @@ public interface IGroupRepository {
     List<Group> GetGroupsFromUser(int userId);
     Group? GetGroupByToken(string token);
     Group AddGroup(CreateGroupReq group);
-    void AddUserToGroup(int userId, int groupId);
+    void JoinGroup(int requestUserId, string requestToken);
 }

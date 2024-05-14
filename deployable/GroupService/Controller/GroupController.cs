@@ -147,6 +147,7 @@ public class GroupController : ControllerBase {
             var contentString = JsonConvert.DeserializeObject<string>(response);
             
             return Ok(contentString);
+            
         } catch (Exception e) {
             Console.WriteLine(e);
             return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
