@@ -8,7 +8,7 @@ public class GroupRepository : IGroupRepository {
 
     public GroupRepository(GroupRepositoryContext context) {
         _context = context;
-        CreateDB();
+        RecreateDB();
     }
     
     public List<Group> GetAllGroups() {
@@ -69,7 +69,7 @@ public class GroupRepository : IGroupRepository {
 
     #region DB
 
-    private void CreateDB() {
+    private void RecreateDB() {
         try {
             Console.WriteLine("Creating database...");
             _context.Database.EnsureCreated();
