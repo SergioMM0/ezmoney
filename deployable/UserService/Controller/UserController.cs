@@ -1,5 +1,6 @@
-﻿using Domain;
-using Messages.User;
+﻿using Messages.User.Dto;
+using Messages.User.Request;
+using Messages.User.Response;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using RPC;
@@ -10,28 +11,47 @@ namespace UserService.Controller;
 [Route("user")]
 public class UserController : ControllerBase {
     private readonly RpcClient _rpcClient;
+    
     public UserController(RpcClient rpcClient) {
         _rpcClient = rpcClient;
     }
+    
     /// <summary>
     /// Attempts to get a user by phone number, returning a 200 OK if successful, 400 Bad Request if not
     /// Sends a petition to the UserRepository to check if the user exists through RabbitMQ
     /// </summary>
     /// <param name="phoneNumber"></param>
     /// <returns>{IActionResult}</returns>
-    [HttpGet("phone/{phoneNumber}")]
+    [HttpGet("{phoneNumber}")]
     public async Task<ActionResult<UserResponse>> GetByPhoneNumber([FromRoute] string phoneNumber) {
-        Console.WriteLine("Getting user by phone number: " + phoneNumber);
         try {
-            var response = await _rpcClient.CallAsync(Operation.GetUserByPhoneNumber,
-                new User { Name = "", PhoneNumber = phoneNumber });
+            var request = new GetUserByPhone() {
+                PhoneNumber = phoneNumber
+            };
+            var response = await _rpcClient.CallAsync(Operation.GetUserByPhoneNumber, request);
             if (response.Contains("null"))
                 return NotFound("User not found");
-            UserResponse user = JsonConvert.DeserializeObject<UserResponse>(response);
+            var user = JsonConvert.DeserializeObject<UserResponse>(response);
             return Ok(user);
         } catch (Exception e) {
             Console.WriteLine(e);
             return BadRequest("Error logging in: " + e.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Retrieves all the users in the system
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("GetAllUsers")]
+    public async Task<ActionResult<List<UserResponse>>> GetAllUsers() {
+        try {
+            var response = await _rpcClient.CallAsync(Operation.GetAllUsers, null);
+            var users = JsonConvert.DeserializeObject<List<UserResponse>>(response);
+            return Ok(users);
+        } catch (Exception e) {
+            Console.WriteLine(e);
+            return BadRequest("Error getting users");
         }
     }
 
@@ -39,32 +59,22 @@ public class UserController : ControllerBase {
     /// Attempts to create a user in the system, returning a 200 OK if successful, 400 Bad Request if not
     /// Sends a petition to the UserRepository through RabbitMQ
     /// </summary>
-    /// <param name="request"></param>
+    /// <param name="dto"></param>
     /// <returns></returns>
-    [HttpPost("create")]
-    public async Task<IActionResult> Create([FromBody] CreateUserReq request) {
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] PostUser dto) {
         try {
-            var response = await _rpcClient.CallAsync(Operation.CreateUser, new User { Name = request.Name, PhoneNumber = request.PhoneNumber });
-            UserResponse user = JsonConvert.DeserializeObject<UserResponse>(response);
+            var request = new CreateUserReq() {
+                Name = dto.Name,
+                PhoneNumber = dto.PhoneNumber
+            };
+
+            var response = await _rpcClient.CallAsync(Operation.CreateUser, request);
+            var user = JsonConvert.DeserializeObject<UserResponse>(response);
             return Ok(user);
         } catch (Exception e) {
             Console.WriteLine(e);
             return BadRequest("Error creating user");
         }
-
-    }
-
-    [HttpPost("GetAllUsers")]
-    public async Task<ActionResult<List<UserResponse>>> GetAllUsers() {
-        try {
-            var response = await _rpcClient.CallAsync(Operation.GetAllUsers, null);
-            List<UserResponse> users = new List<UserResponse>();
-            users = JsonConvert.DeserializeObject<List<UserResponse>>(response);
-            return Ok(users);
-        } catch (Exception e) {
-            Console.WriteLine(e);
-            return BadRequest("Error getting users");
-        }
-
     }
 }

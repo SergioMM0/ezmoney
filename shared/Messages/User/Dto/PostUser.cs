@@ -1,14 +1,9 @@
-﻿namespace Messages.User;
+﻿namespace Messages.User.Dto;
 
 /// <summary>
-/// Response object for a user 
+/// Clients dto to create a user
 /// </summary>
-public class UserResponse {
-    /// <summary>
-    /// Id of the user
-    /// </summary>
-    public int Id { get; set; }
-    
+public class PostUser {
     /// <summary>
     /// Name of the user
     /// </summary>

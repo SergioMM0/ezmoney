@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using Messages.Auth;
 using Messages.User;
+using Messages.User.Request;
+using Messages.User.Response;
 using Microsoft.AspNetCore.Authentication;
 
 namespace AuthService.Services;

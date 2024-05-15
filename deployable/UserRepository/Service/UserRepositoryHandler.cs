@@ -1,4 +1,4 @@
-﻿using Domain;
+﻿using Messages.User.Request;
 using Newtonsoft.Json;
 using RPC;
 using RPC.Interfaces;
@@ -20,7 +20,7 @@ public class UserRepositoryHandlers : IRequestHandler {
 
     private string HandleCreateUser(object data) {
         try {
-            var user = JsonConvert.DeserializeObject<User>(data.ToString()!);
+            var user = JsonConvert.DeserializeObject<CreateUserReq>(data.ToString()!);
             var userAdded = _userRepositoryService.AddUser(user!);
             var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(userAdded) };
             return JsonConvert.SerializeObject(response);
@@ -43,7 +43,7 @@ public class UserRepositoryHandlers : IRequestHandler {
 
     private string HandleGetUserByPhoneNumber(object data) {
         try {
-            var user = JsonConvert.DeserializeObject<User>(data.ToString()!);
+            var user = JsonConvert.DeserializeObject<GetUserByPhone>(data.ToString()!);
             var userWithPhoneNumber = _userRepositoryService.GetUserByPhoneNumber(user!);
             var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(userWithPhoneNumber) };
             return JsonConvert.SerializeObject(response);
@@ -73,21 +73,4 @@ public class UserRepositoryHandlers : IRequestHandler {
             return JsonConvert.SerializeObject(new { error = $"Error handling request: {ex.Message}" });
         }
     }
-
-
-    private string CreateUser(object data) {
-        // Assume data can be deserialized into a User object
-        var user = JsonConvert.DeserializeObject<User>(data.ToString());
-        Console.WriteLine($"Creating user: {user.Name}");
-        _userRepositoryService.AddUser(user);
-
-        // Simulate user creation logic
-        return JsonConvert.SerializeObject(user);
-    }
-
-    private string GetAllUsers() {
-        var users = _userRepositoryService.GetAllUsers();
-        return JsonConvert.SerializeObject(users);
-    }
-
 }
