@@ -1,4 +1,4 @@
-﻿namespace Messages.User;
+﻿namespace Messages.User.Request;
 
 /// <summary>
 /// DTO for creating a user

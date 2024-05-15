@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using Messages.Auth;
 using Messages.User;
+using Messages.User.Request;
+using Messages.User.Response;
 using Microsoft.AspNetCore.Authentication;
 
 namespace AuthService.Services;
@@ -16,7 +18,7 @@ public class AuthService {
         _client = client;
     }
     
-    public async Task<AuthenticationToken> Register(RegisterUserReq request) {
+    public async Task<string> Register(RegisterUserReq request) {
         // 1. Parse the RegisterUserReq to a CreateUserReq
         var createUserReq = new CreateUserReq {
             Name = request.Name,
@@ -29,12 +31,12 @@ public class AuthService {
             throw new Exception("Error creating user. User service returned: " + response.StatusCode);
         }
         
-        UserResponse user = await response.Content.ReadFromJsonAsync<UserResponse>();
-        Console.WriteLine("user created: " + user.Id + " " + user.Name + " " + user.PhoneNumber);
+        var user = await response.Content.ReadFromJsonAsync<UserResponse>();
+        Console.WriteLine("user created: " + user!.Id + " " + user.Name + " " + user.PhoneNumber);
         
         //3. Create a token for the user (with user data)
         var token = _jwtTokenService.CreateToken(user);
-        return token;
+        return token.Value;
     }
     
     public async Task<AuthenticationToken> Login(LoginUserReq request) {
@@ -44,8 +46,8 @@ public class AuthService {
             throw new Exception("Error logging in. User service returned: " + response.StatusCode);
         }
         
-        UserResponse user = await response.Content.ReadFromJsonAsync<UserResponse>();
-        Console.WriteLine("user logged in: " + user.Id + " " + user.Name + " " + user.PhoneNumber);
+        var user = await response.Content.ReadFromJsonAsync<UserResponse>();
+        Console.WriteLine("user logged in: " + user!.Id + " " + user.Name + " " + user.PhoneNumber);
         
         //2. Create a token for the user (with user data)
         var token = _jwtTokenService.CreateToken(user);

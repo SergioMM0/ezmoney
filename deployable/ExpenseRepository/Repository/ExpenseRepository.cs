@@ -1,5 +1,4 @@
 ﻿using Domain;
-using Messages.Expense;
 
 namespace ExpenseRepository.Repository;
 
@@ -12,58 +11,46 @@ public class ExpenseRepository : IExpenseRepository {
         CreateDB();
     }
 
-    public List<Expense> GetExpenseFromUserInGroup(ExpenseDto expenseDto) {
+    public List<Expense> GetExpensesFromUser(int groupId, int userId) {
         try {
             return _context.UserExpenseTable
-                .Where(ue => ue.UserId == expenseDto.UserId)
+                .Where(ue => ue.UserId == userId)
                 .Join(_context.ExpenseTable,
                     ue => ue.ExpenseId,
                     e => e.Id,
                     (ue, e) => e)
-                .Where(e => e.GroupId == expenseDto.GroupId)
+                .Where(e => e.GroupId == groupId)
                 .Distinct()
                 .ToList();
         } catch (Exception e) {
-
             throw new ApplicationException("An error occurred while getting the expenses.", e);
         }
-
+    }
+    
+    public List<Expense> GetExpensesFromGroup(int groupId) {
+        try {
+            return _context.ExpenseTable
+                .Where(e => e.GroupId == groupId)
+                .ToList();
+        } catch (Exception e) {
+            throw new ApplicationException("An error occurred while getting the expenses.", e);
+        }
     }
 
-    public Expense AddExpense(PostExpense expense) {
-        Expense newExpense = new Expense() {
-            Amount = expense.Amount,
-            Description = expense.Description,
-            GroupId = expense.GroupId,
-            Date = expense.Date,
-            OwnerId = expense.OwnerId,
-            Participants = expense.Participants
-        };
-
+    public Expense Create(Expense expense) {
         try {
-            _context.ExpenseTable.Add(newExpense);
+            _context.ExpenseTable.Add(expense);
             _context.SaveChanges();
-            AddUserExpense(expense.OwnerId, newExpense.Id);
-            return newExpense;
+            AddUserExpense(expense.OwnerId, expense.Id);
+            return expense;
         } catch (Exception ex) {
             throw new ApplicationException("An error occurred while adding the expense.", ex);
         }
     }
 
-    public List<Expense> GetExpensesFromGroup(ExpenseDto expenseDto) {
+    private void AddUserExpense(int userId, int expenseId) {
         try {
-            return _context.ExpenseTable
-                .Where(e => e.GroupId == expenseDto.GroupId)
-                .ToList();
-        } catch (Exception e) {
-            throw new ApplicationException("An error occurred while getting the expenses.", e);
-        }
-
-    }
-
-    public void AddUserExpense(int userId, int expenseId) {
-        try {
-            UserExpense userExpense = new UserExpense {
+            var userExpense = new UserExpense {
                 UserId = userId,
                 ExpenseId = expenseId
             };

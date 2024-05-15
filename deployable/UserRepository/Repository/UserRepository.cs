@@ -30,9 +30,9 @@ public class UserRepository : IUserRepository {
 
     }
 
-    public User GetUserByPhoneNumber(User user) {
+    public User GetUserByPhoneNumber(string phoneNumber) {
         try {
-            return _context.UserTable.FirstOrDefault(u => u.PhoneNumber == user.PhoneNumber);
+            return _context.UserTable.FirstOrDefault(u => u.PhoneNumber == phoneNumber)!;
         } catch (Exception ex) {
             throw new ApplicationException("An error occurred while retrieving the user.", ex);
         }

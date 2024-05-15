@@ -1,10 +1,9 @@
 ﻿using Domain;
-using Messages.Expense;
 
 namespace ExpenseRepository.Repository;
 
 public interface IExpenseRepository {
-    public List<Expense> GetExpenseFromUserInGroup(ExpenseDto expenseDto);
-    public Expense AddExpense(PostExpense expense);
-    public List<Expense> GetExpensesFromGroup(ExpenseDto expenseDto);
+    public List<Expense> GetExpensesFromUser(int groupId, int userId);
+    public List<Expense> GetExpensesFromGroup(int groupId);
+    public Expense Create(Expense expense);
 }
