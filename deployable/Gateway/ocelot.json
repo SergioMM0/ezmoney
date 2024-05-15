@@ -1,4 +1,11 @@
 ﻿{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft": "Warning",
+      "Ocelot": "Debug"
+    }
+  },
   "Routes": [
     {
       "UpstreamPathTemplate": "/login",
@@ -10,7 +17,8 @@
           "Host": "auth-service",
           "Port": 8080
         }
-      ]
+      ],
+      "Key": "Login"
     },
     {
       "UpstreamPathTemplate": "/register",
@@ -22,7 +30,8 @@
           "Host": "auth-service",
           "Port": 8080
         }
-      ]
+      ],
+      "Key": "Register"
     },
     {
       "UpstreamPathTemplate": "/users/phone/{phoneNumber}",
@@ -31,13 +40,14 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "auth-service",
+          "Host": "user-service",
           "Port": 8080
         }
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
-      }
+      },
+      "Key": "GetUserByPhone"
     },
     {
       "UpstreamPathTemplate": "/users/{userId}/groups",
@@ -52,7 +62,8 @@
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
-      }
+      },
+      "Key": "GetGroupsByUser"
     },
     {
       "UpstreamPathTemplate": "/groups",
@@ -67,7 +78,8 @@
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
-      }
+      },
+      "Key": "CreateGroup"
     },
     {
       "UpstreamPathTemplate": "/groups/join",
@@ -82,7 +94,8 @@
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
-      }
+      },
+      "Key": "JoinGroup"
     },
     {
       "UpstreamPathTemplate": "/groups/{groupId}/expenses",
@@ -97,7 +110,8 @@
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
-      }
+      },
+      "Key": "GetExpensesByGroup"
     },
     {
       "UpstreamPathTemplate": "/groups/{groupId}/expenses",
@@ -112,7 +126,34 @@
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
-      }
+      },
+      "Key": "CreateExpense"
+    },
+    {
+      "UpstreamPathTemplate": "/groups/{groupId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/group/{groupId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "group-service",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Key": "GetGroupById"
+    }
+  ],
+  "Aggregates": [
+    {
+      "RouteKeys": [
+        "GetGroupById",
+        "GetExpensesByGroup"
+      ],
+      "UpstreamPathTemplate": "/group-with-expenses/{groupId}",
+      "UpstreamHttpMethod": [ "GET" ]
     }
   ]
 }

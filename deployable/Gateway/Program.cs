@@ -40,12 +40,12 @@ if (app.Environment.IsDevelopment()) {
     app.UseSwaggerUI();
 }
 
+app.MapControllers();
+
 app.UseOcelot().Wait();
 
 app.UseAuthorization();
 
 app.UseAuthentication();
-
-app.MapControllers();
 
 app.Run();
