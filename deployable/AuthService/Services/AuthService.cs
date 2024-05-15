@@ -44,8 +44,8 @@ public class AuthService {
             throw new Exception("Error logging in. User service returned: " + response.StatusCode);
         }
         
-        UserResponse user = await response.Content.ReadFromJsonAsync<UserResponse>();
-        Console.WriteLine("user logged in: " + user.Id + " " + user.Name + " " + user.PhoneNumber);
+        var user = await response.Content.ReadFromJsonAsync<UserResponse>();
+        Console.WriteLine("user logged in: " + user!.Id + " " + user.Name + " " + user.PhoneNumber);
         
         //2. Create a token for the user (with user data)
         var token = _jwtTokenService.CreateToken(user);

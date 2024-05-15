@@ -24,7 +24,6 @@ public class ExpenseRepository : IExpenseRepository {
                 .Distinct()
                 .ToList();
         } catch (Exception e) {
-
             throw new ApplicationException("An error occurred while getting the expenses.", e);
         }
 
