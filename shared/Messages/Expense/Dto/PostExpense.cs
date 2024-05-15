@@ -1,4 +1,4 @@
-﻿namespace Messages.Expense;
+﻿namespace Messages.Expense.Dto;
 
 public class PostExpense {
     public required int OwnerId { get; set; }

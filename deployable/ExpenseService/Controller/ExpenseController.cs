@@ -1,4 +1,6 @@
-﻿using Messages.Expense;
+﻿using Messages.Expense.Dto;
+using Messages.Expense.Request;
+using Messages.Expense.Response;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using RPC;
@@ -15,11 +17,14 @@ public class ExpenseController : ControllerBase {
         _rpcClient = rpcClient;
     }
 
-    [HttpPost("GetExpensesFromUserInGroup")]
-    public async Task<ActionResult<List<ExpenseResponse>>> GetExpensesFromUserInGroup([FromBody] ExpenseDto request) {
+    [HttpGet("{groupId}/user/{userId}")]
+    public async Task<ActionResult<List<ExpenseResponse>>> GetExpensesFromUser([FromRoute] int groupId, [FromRoute] int userId) {
         try {
-            var response = await _rpcClient.CallAsync(Operation.GetExpensesFromUserInGroup,
-                new ExpenseDto() { UserId = request.UserId, GroupId = request.GroupId });
+            var request = new GetExpensesUserReq() {
+                UserId = userId,
+                GroupId = groupId
+            };
+            var response = await _rpcClient.CallAsync(Operation.GetExpensesFromUserInGroup, request);
             var expenses = JsonConvert.DeserializeObject<List<ExpenseResponse>>(response);
             return Ok(expenses);
         } catch (Exception e) {
@@ -29,10 +34,12 @@ public class ExpenseController : ControllerBase {
     }
 
     [HttpGet("{groupId}/expenses")]
-    public async Task<ActionResult<List<ExpenseResponse>>> AllExpensesFromGroup([FromRoute] int groupId) {
+    public async Task<ActionResult<List<ExpenseResponse>>> GetExpensesFromGroup([FromRoute] int groupId) {
         try {
-            var response = await _rpcClient.CallAsync(Operation.GetExpensesFromGroup,
-                new ExpenseDto() { GroupId = groupId, UserId = 0 });
+            var request = new GetExpensesReq() {
+                GroupId = groupId
+            };
+            var response = await _rpcClient.CallAsync(Operation.GetExpensesFromGroup, request);
             var expenses = JsonConvert.DeserializeObject<List<ExpenseResponse>>(response);
             return Ok(expenses);
         } catch (Exception e) {
@@ -44,11 +51,17 @@ public class ExpenseController : ControllerBase {
     [HttpPost]
     public async Task<ActionResult<ExpenseResponse>> Create([FromBody] PostExpense request) {
         try {
-            var response = await _rpcClient.CallAsync(Operation.CreateExpense,
-                new PostExpense {
-                    Amount = request.Amount, Description = request.Description, GroupId = request.GroupId, OwnerId = request.OwnerId,
-                    Participants = request.Participants, Date = DateTime.Now
-                });
+            // Add datetime to the request
+            var expenseRequest = new CreateExpenseReq {
+                Amount = request.Amount,
+                Description = request.Description,
+                GroupId = request.GroupId,
+                OwnerId = request.OwnerId,
+                Participants = request.Participants,
+                Date = request.Date
+            };
+
+            var response = await _rpcClient.CallAsync(Operation.CreateExpense, expenseRequest);
             var expense = JsonConvert.DeserializeObject<ExpenseResponse>(response);
             return Ok(expense);
         } catch (Exception e) {
