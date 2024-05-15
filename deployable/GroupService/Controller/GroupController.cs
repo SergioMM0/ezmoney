@@ -63,7 +63,7 @@ public class GroupController : ControllerBase {
     public async Task<ActionResult<GroupResponse>> GetById([FromRoute] int groupId) {
         try {
             if (groupId <= 0) {
-                return BadRequest("Invalid user id");
+                return BadRequest("Invalid group id");
             }
             
             // Create request object to send to the group repository
