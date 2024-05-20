@@ -1,0 +1,159 @@
+﻿{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft": "Warning",
+      "Ocelot": "Debug"
+    }
+  },
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/login",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/auth/login", 
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "auth-service",
+          "Port": 8080
+        }
+      ],
+      "Key": "Login"
+    },
+    {
+      "UpstreamPathTemplate": "/register",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/auth/register",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "auth-service",
+          "Port": 8080
+        }
+      ],
+      "Key": "Register"
+    },
+    {
+      "UpstreamPathTemplate": "/users/phone/{phoneNumber}",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/user/phone/{phoneNumber}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "user-service",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Key": "GetUserByPhone"
+    },
+    {
+      "UpstreamPathTemplate": "/users/{userId}/groups",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/group/{userId}/groups",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "group-service",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Key": "GetGroupsByUser"
+    },
+    {
+      "UpstreamPathTemplate": "/groups",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/group",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "group-service",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Key": "CreateGroup"
+    },
+    {
+      "UpstreamPathTemplate": "/groups/join",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/group/join",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "group-service",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Key": "JoinGroup"
+    },
+    {
+      "UpstreamPathTemplate": "/groups/{groupId}/expenses",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/expense/{groupId}/expenses",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "expense-service",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Key": "GetExpensesByGroup"
+    },
+    {
+      "UpstreamPathTemplate": "/groups/{groupId}/expenses",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/expense",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "expense-service",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Key": "CreateExpense"
+    },
+    {
+      "UpstreamPathTemplate": "/groups/{groupId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/group/{groupId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "group-service",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Key": "GetGroupById"
+    }
+  ],
+  "Aggregates": [
+    {
+      "RouteKeys": [
+        "GetGroupById",
+        "GetExpensesByGroup"
+      ],
+      "UpstreamPathTemplate": "/group-with-expenses/{groupId}",
+      "UpstreamHttpMethod": [ "GET" ]
+    }
+  ]
+}

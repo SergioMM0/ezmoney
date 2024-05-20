@@ -462,3 +462,6 @@ ehthumbs_vista.db
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
+deployable/GroupRepository/db.db
+deployable/GroupRepository/db.db-shm
+deployable/GroupRepository/db.db-wal
