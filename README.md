@@ -3,6 +3,10 @@
 Broad Approach<br/>
 EASV - 2024
 
+## Note for the reviewer/examinator:
+Please notice that the branch for System Integration synopsis is on https://github.com/SergioMM0/ezmoney/tree/1.0, marked with the tag 1.0.
+The desired branch for Development of Large Systems will be soon available under the next release marked with the tag 2.0.
+
 ## Introduction
 Managing shared expenses have been a hassle ever since people were living in caves, thousands of years ago.
 Nowadays, the same issue is still present between groups of friends/family.
