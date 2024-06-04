@@ -22,7 +22,8 @@ builder.Services.AddDbContext<GroupRepositoryContext>(options =>
 builder.Services.AddScoped<IGroupRepository, GroupRepository.Repository.GroupRepository>();
 builder.Services.AddScoped<GroupRepositoryService>();
 builder.Services.AddScoped<GroupRepositoryHandlers>();
-builder.Services.AddHostedService<RpcBackgroundService>();
+Thread thread = new Thread(() => builder.Services.AddHostedService<RpcBackgroundService>());
+thread.Start();
 
 var app = builder.Build();
 
