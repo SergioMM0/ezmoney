@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddControllers();
 builder.Services.Configure<Topics>(builder.Configuration.GetSection("RPCMessages"));
 builder.Services.AddSingleton<Topics>(sp =>
     sp.GetRequiredService<IOptions<Topics>>().Value);
@@ -35,6 +35,6 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
+app.MapControllers();
 
 app.Run();
