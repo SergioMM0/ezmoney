@@ -1,9 +1,11 @@
-﻿using Messages.User.Dto;
+﻿using System.Diagnostics;
+using Messages.User.Dto;
 using Messages.User.Request;
 using Messages.User.Response;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using RPC;
+
 
 namespace UserService.Controller;
 
@@ -31,9 +33,12 @@ public class UserController : ControllerBase {
             var response = await _rpcClient.CallAsync(Operation.GetUserByPhoneNumber, request);
             if (response.Contains("null"))
                 return NotFound("User not found");
+            if (response.Contains("TimeOut"))
+                return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
             var user = JsonConvert.DeserializeObject<UserResponse>(response);
             return Ok(user);
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("Error getting user by phone number");
             Console.WriteLine(e);
             return BadRequest("Error logging in: " + e.Message);
         }
@@ -50,6 +55,7 @@ public class UserController : ControllerBase {
             var users = JsonConvert.DeserializeObject<List<UserResponse>>(response);
             return Ok(users);
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("Error getting users");
             Console.WriteLine(e);
             return BadRequest("Error getting users");
         }
@@ -73,6 +79,7 @@ public class UserController : ControllerBase {
             var user = JsonConvert.DeserializeObject<UserResponse>(response);
             return Ok(user);
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("Error creating user");
             Console.WriteLine(e);
             return BadRequest("Error creating user");
         }

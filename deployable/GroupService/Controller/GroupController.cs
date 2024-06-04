@@ -45,6 +45,7 @@ public class GroupController : ControllerBase {
             var groups = JsonConvert.DeserializeObject<List<GroupResponse>>(groupResponse);
             return Ok(groups);
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("Error getting groups from user");
             Console.WriteLine(e);
             return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
         }
@@ -78,6 +79,7 @@ public class GroupController : ControllerBase {
             var group = JsonConvert.DeserializeObject<GroupResponse>(groupResponse);
             return Ok(group);
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("Error getting group by id");
             Console.WriteLine(e);
             return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
         }
@@ -114,6 +116,7 @@ public class GroupController : ControllerBase {
             return Ok(group);
 
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("Error creating group");
             Console.WriteLine(e);
             return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
         }
@@ -145,6 +148,7 @@ public class GroupController : ControllerBase {
             return Ok(contentString);
 
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("Error joining group");
             Console.WriteLine(e);
             return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
         }
