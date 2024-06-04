@@ -22,7 +22,8 @@ builder.Services.AddDbContext<ExpenseRepositoryContext>(options =>
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository.Repository.ExpenseRepository>();
 builder.Services.AddScoped<ExpenseRepositoryService>();
 builder.Services.AddScoped<ExpenseRepositoryHandlers>();
-builder.Services.AddHostedService<RpcBackgroundService>();
+Thread thread = new Thread(() => builder.Services.AddHostedService<RpcBackgroundService>());
+thread.Start();
 
 
 var app = builder.Build();
