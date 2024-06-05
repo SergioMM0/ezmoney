@@ -1,4 +1,5 @@
-﻿using Messages.Group;
+﻿using FeatureHubSDK;
+using Messages.Group;
 using Messages.Group.Dto;
 using Messages.Group.Request;
 using Messages.Group.Response;
@@ -12,9 +13,12 @@ namespace GroupService.Controller;
 [Route("group")]
 public class GroupController : ControllerBase {
     private readonly RpcClient _rpcClient;
+    private readonly IClientContext _clientContext;
 
-    public GroupController(RpcClient rpcClient) {
+
+    public GroupController(RpcClient rpcClient, IClientContext clientContext) {
         _rpcClient = rpcClient;
+        _clientContext = clientContext;
     }
 
     /// <summary>
@@ -39,6 +43,12 @@ public class GroupController : ControllerBase {
             var groupsUserReq = new GroupsUserReq() {
                 UserId = userId
             };
+            
+            if (_clientContext.IsEnabled("helloworld")) {
+                Console.WriteLine("Feature is enabled");
+            } else {
+                Console.WriteLine("Feature is not enabled");
+            }
 
             // Fetches all groups from user
             var groupResponse = await _rpcClient.CallAsync(Operation.GetGroupsFromUser, groupsUserReq);
