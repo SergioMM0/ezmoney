@@ -4,8 +4,9 @@ using Messages.User.Request;
 using Messages.User.Response;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Polly;
+using Polly.CircuitBreaker;
 using RPC;
-
 
 namespace UserService.Controller;
 
@@ -13,60 +14,89 @@ namespace UserService.Controller;
 [Route("user")]
 public class UserController : ControllerBase {
     private readonly RpcClient _rpcClient;
-    
-    public UserController(RpcClient rpcClient) {
+    private readonly IAsyncPolicy<HttpResponseMessage> _policies;
+
+    public UserController(RpcClient rpcClient, IAsyncPolicy<HttpResponseMessage> policies) {
         _rpcClient = rpcClient;
+        _policies = policies;
     }
     
-    /// <summary>
-    /// Attempts to get a user by phone number, returning a 200 OK if successful, 400 Bad Request if not
-    /// Sends a petition to the UserRepository to check if the user exists through RabbitMQ
-    /// </summary>
-    /// <param name="phoneNumber"></param>
-    /// <returns>{IActionResult}</returns>
     [HttpGet("{phoneNumber}")]
-    public async Task<ActionResult<UserResponse>> GetByPhoneNumber([FromRoute] string phoneNumber) {
-        try {
-            var request = new GetUserByPhone() {
+    public async Task<ActionResult<UserResponse>> GetByPhoneNumber([FromRoute] string phoneNumber)
+    {
+        try
+        {
+            var request = new GetUserByPhone()
+            {
                 PhoneNumber = phoneNumber
             };
-            var response = await _rpcClient.CallAsync(Operation.GetUserByPhoneNumber, request);
-            if (response.Contains("null"))
+
+            var response = await _policies.ExecuteAsync(async () =>
+            {
+                var rpcResponse = await _rpcClient.CallAsync(Operation.GetUserByPhoneNumber, request);
+                return new HttpResponseMessage()
+                {
+                    Content = new StringContent(rpcResponse)
+                };
+            });
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            if (responseContent.Contains("null"))
                 return NotFound("User not found");
-            if (response.Contains("TimeOut"))
-                return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
-            var user = JsonConvert.DeserializeObject<UserResponse>(response);
+
+            var user = JsonConvert.DeserializeObject<UserResponse>(responseContent);
             return Ok(user);
-        } catch (Exception e) {
+        }
+        catch (BrokenCircuitException)
+        {
+            Monitoring.Monitoring.Log.Error("GetUserByPhoneNumber::Circuit breaker is open, request aborted.");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Service is temporarily unavailable. Please try again later.");
+        }
+        catch (RpcTimeoutException)
+        {
+            return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
+        }
+        catch (Exception e)
+        {
             Monitoring.Monitoring.Log.Error("Error getting user by phone number");
             Console.WriteLine(e);
             return BadRequest("Error logging in: " + e.Message);
         }
     }
-    
-    /// <summary>
-    /// Retrieves all the users in the system
-    /// </summary>
-    /// <returns></returns>
+
     [HttpGet("GetAllUsers")]
     public async Task<ActionResult<List<UserResponse>>> GetAllUsers() {
         try {
-            var response = await _rpcClient.CallAsync(Operation.GetAllUsers, null);
-            var users = JsonConvert.DeserializeObject<List<UserResponse>>(response);
+            var response = await _policies.ExecuteAsync(async () =>
+            {
+                var rpcResponse = await _rpcClient.CallAsync(Operation.GetAllUsers, null);
+                return new HttpResponseMessage()
+                {
+                    Content = new StringContent(rpcResponse)
+                };
+            });
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var users = JsonConvert.DeserializeObject<List<UserResponse>>(responseContent);
             return Ok(users);
-        } catch (Exception e) {
+        }
+        catch (BrokenCircuitException)
+        {
+            Monitoring.Monitoring.Log.Error("GetAllUsers::Circuit breaker is open, request aborted.");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Service is temporarily unavailable. Please try again later.");
+        }
+        catch (RpcTimeoutException)
+        {
+            return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
+        }
+        catch (Exception e)
+        {
             Monitoring.Monitoring.Log.Error("Error getting users");
             Console.WriteLine(e);
-            return BadRequest("Error getting users");
+            return BadRequest("Error getting users: " + e.Message);
         }
     }
 
-    /// <summary>
-    /// Attempts to create a user in the system, returning a 200 OK if successful, 400 Bad Request if not
-    /// Sends a petition to the UserRepository through RabbitMQ
-    /// </summary>
-    /// <param name="dto"></param>
-    /// <returns></returns>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] PostUser dto) {
         try {
@@ -75,13 +105,33 @@ public class UserController : ControllerBase {
                 PhoneNumber = dto.PhoneNumber
             };
 
-            var response = await _rpcClient.CallAsync(Operation.CreateUser, request);
-            var user = JsonConvert.DeserializeObject<UserResponse>(response);
+            var response = await _policies.ExecuteAsync(async () =>
+            {
+                var rpcResponse = await _rpcClient.CallAsync(Operation.CreateUser, request);
+                return new HttpResponseMessage()
+                {
+                    Content = new StringContent(rpcResponse)
+                };
+            });
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var user = JsonConvert.DeserializeObject<UserResponse>(responseContent);
             return Ok(user);
-        } catch (Exception e) {
+        }
+        catch (BrokenCircuitException)
+        {
+            Monitoring.Monitoring.Log.Error("Create::Circuit breaker is open, request aborted.");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Service is temporarily unavailable. Please try again later.");
+        }
+        catch (RpcTimeoutException)
+        {
+            return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
+        }
+        catch (Exception e)
+        {
             Monitoring.Monitoring.Log.Error("Error creating user");
             Console.WriteLine(e);
-            return BadRequest("Error creating user");
+            return BadRequest("Error creating user: " + e.Message);
         }
     }
 }

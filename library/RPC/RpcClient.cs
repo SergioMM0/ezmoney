@@ -133,72 +133,26 @@ public class RpcClient : IDisposable {
         };
     }
 
-    // public Task<string> CallAsync(Operation operation, object data) {
-    //     // Generating a unique correlation ID for the request.
-    //     var correlationId = Guid.NewGuid().ToString();
-    //     // Creating basic properties for the MESSAGE.
-    //     // The basic properties include the correlation ID and the reply queue name.
-    //     var props = _channel.CreateBasicProperties();
-    //     props.CorrelationId = correlationId;
-    //     // The replyTo property is set to the reply queue name.
-    //     props.ReplyTo = _replyQueueName;
-    //     // Creating a request object with the operation and data.
-    //     // data is the object that has been serialized by the controller it contains the necessary
-    //     // information to perform the operation.
-    //     var request = new { Operation = operation, Data = data };
-    //     var message = JsonConvert.SerializeObject(request);
-    //     // Converting the message to a byte array.
-    //     // The message is serialized to a byte array using UTF-8 encoding before being sent to the server.
-    //     //Messages sent to RabbitMQ must be in a format that can be reliably transmitted over the network and
-    //     //understood by the message broker and any receiving clients. In the case of RabbitMQ, which is fundamentally agnostic
-    //     //about the content of the messages, data must be transformed into a binary format—hence the byte array
-    //
-    //     var messageBytes = Encoding.UTF8.GetBytes(message);
-    //     // Adding the correlation ID and the TaskCompletionSource to the pending requests dictionary.
-    //     var tcs = new TaskCompletionSource<string>();
-    //     _pendingRequests[correlationId] = tcs;
-    //     // Publishing the message to the server.
-    //     _channel.BasicPublish(
-    //         exchange: "",
-    //         routingKey: _topic,
-    //         basicProperties: props,
-    //         body: messageBytes);
-    //     // Returning the Task associated with the request.
-    //     return tcs.Task.ContinueWith(task => {
-    //         if (task.IsFaulted) {
-    //             throw task.Exception ?? new Exception("Task failed without an exception.");
-    //         }
-    //         // Deserializing the response from the server.
-    //         // The response from the server is deserialized from JSON to an ApiResponse object.
-    //         // The ApiResponse object contains the success status, error message, and data returned by the server.
-    //         // If the response indicates success, the data is returned to the caller.
-    //         // If the response indicates an error, an ApplicationException is thrown with the error message.
-    //         // This mechanism ensures that the caller receives the correct response data or an Exception from the RPC server.
-    //         // as normally the repository will return only a string.
-    //
-    //         var response = JsonConvert.DeserializeObject<ApiResponse>(task.Result);
-    //         if (!response.Success) {
-    //             throw new ApplicationException(response.ErrorMessage);
-    //         }
-    //
-    //         return response.Data;
-    //     });
-    // }
-    public Task<string> CallAsync(Operation operation, object data) {
-        return CallAsync(operation, data, TimeSpan.FromSeconds(30)); // Default timeout of 30 seconds
-    }
-    public async Task<string> CallAsync(Operation operation, object data, TimeSpan timeout) {
+    public async Task<string> CallAsync(Operation operation, object data) {
         // Generating a unique correlation ID for the request.
         var correlationId = Guid.NewGuid().ToString();
-        // Creating basic properties for the message.
+        // Creating basic properties for the MESSAGE.
+        // The basic properties include the correlation ID and the reply queue name.
         var props = _channel.CreateBasicProperties();
         props.CorrelationId = correlationId;
         // The replyTo property is set to the reply queue name.
         props.ReplyTo = _replyQueueName;
         // Creating a request object with the operation and data.
+        // data is the object that has been serialized by the controller it contains the necessary
+        // information to perform the operation.
         var request = new { Operation = operation, Data = data };
         var message = JsonConvert.SerializeObject(request);
         // Converting the message to a byte array.
+        // The message is serialized to a byte array using UTF-8 encoding before being sent to the server.
+        //Messages sent to RabbitMQ must be in a format that can be reliably transmitted over the network and
+        //understood by the message broker and any receiving clients. In the case of RabbitMQ, which is fundamentally agnostic
+        //about the content of the messages, data must be transformed into a binary format—hence the byte array
+    
         var messageBytes = Encoding.UTF8.GetBytes(message);
         // Adding the correlation ID and the TaskCompletionSource to the pending requests dictionary.
         var tcs = new TaskCompletionSource<string>();
@@ -209,23 +163,19 @@ public class RpcClient : IDisposable {
             routingKey: _topic,
             basicProperties: props,
             body: messageBytes);
-
-        // Create a task that will complete after the specified timeout.
-        var timeoutTask = Task.Delay(timeout).ContinueWith(_ => "TimeOut");
-
-        // Wait for either the RPC call to complete or the timeout task to complete.
-        var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
-
-        // If the completed task is the timeout task, return "TimeOut".
-        if (completedTask == timeoutTask) {
-            _pendingRequests.TryRemove(correlationId, out _);
-            return "TimeOut";
-        }
-
-        // Otherwise, await the RPC call task and handle the response.
-        var result = await tcs.Task;
-
+        
+        // Returning the Task associated with the request.
+       
         // Deserializing the response from the server.
+        // The response from the server is deserialized from JSON to an ApiResponse object.
+        // The ApiResponse object contains the success status, error message, and data returned by the server.
+        // If the response indicates success, the data is returned to the caller.
+        // If the response indicates an error, an ApplicationException is thrown with the error message.
+        // This mechanism ensures that the caller receives the correct response data or an Exception from the RPC server.
+        // as normally the repository will return only a string.
+    
+            
+        var result = await tcs.Task;
         var response = JsonConvert.DeserializeObject<ApiResponse>(result);
         if (!response.Success) {
             throw new ApplicationException(response.ErrorMessage);
@@ -233,6 +183,7 @@ public class RpcClient : IDisposable {
 
         return response.Data;
     }
+    
     // Disposing of the RpcClient object.
     // The Dispose method is called to release resources used by the RpcClient object.
     // This method ensures that the connection to the RabbitMQ server is closed and that the channel is disposed of properly.
