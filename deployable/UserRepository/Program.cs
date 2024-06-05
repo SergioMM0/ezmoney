@@ -1,6 +1,9 @@
 ﻿using Messages.RPC;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Polly;
+using Polly.Extensions.Http;
+using RPC;
 using RPC.RpcFactory;
 using UserRepository.Repository;
 using UserRepository.Service;
@@ -29,6 +32,7 @@ builder.Services.AddScoped<UserRepositoryService>();
 builder.Services.AddScoped<UserRepositoryHandlers>();
 Thread thread = new Thread(() => builder.Services.AddHostedService<RpcBackgroundService>());
 thread.Start();
+
 
 
 var app = builder.Build();
