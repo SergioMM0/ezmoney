@@ -1,3 +1,4 @@
+version: '3.7'
 services:
   gateway:
     image: gateway
@@ -5,12 +6,15 @@ services:
       context: .
       dockerfile: deployable/Gateway/Dockerfile
     ports:
-      - "8080:8080"
+      - "8080-8082:8080"
     depends_on:
       - user-service
       - group-service
       - expense-service
       - auth-service
+    deploy:
+      mode: replicated
+      replicas: 3
   user-service:
     image: user-service
     build:
