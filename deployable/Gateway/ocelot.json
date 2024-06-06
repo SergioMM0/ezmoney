@@ -34,9 +34,9 @@
       "Key": "Register"
     },
     {
-      "UpstreamPathTemplate": "/users/phone/{phoneNumber}",
-      "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/user/phone/{phoneNumber}",
+      "UpstreamPathTemplate": "/user/{phoneNumber}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/user/{phoneNumber}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -114,7 +114,7 @@
       "Key": "GetExpensesByGroup"
     },
     {
-      "UpstreamPathTemplate": "/groups/{groupId}/expenses",
+      "UpstreamPathTemplate": "/expense",
       "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/expense",
       "DownstreamScheme": "http",
@@ -144,6 +144,22 @@
         "AuthenticationProviderKey": "Bearer"
       },
       "Key": "GetGroupById"
+    },
+    {
+      "UpstreamPathTemplate": "/expenses/{groupId}/{userId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/expense/{groupId}/user/{userId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "expense-service",
+          "Port": 8080
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "Key": "GetExpensesFromUser"
     }
   ],
   "Aggregates": [
