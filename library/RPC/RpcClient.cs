@@ -132,8 +132,10 @@ public class RpcClient : IDisposable {
             }
         };
     }
-
-    public async Task<string> CallAsync(Operation operation, object data) {
+    public Task<string> CallAsync(Operation operation, object data) {
+        return CallAsync(operation, data, TimeSpan.FromSeconds(30)); // Default timeout of 30 seconds
+    }
+    public async Task<string> CallAsync(Operation operation, object data, TimeSpan timeout) {
         // Generating a unique correlation ID for the request.
         var correlationId = Guid.NewGuid().ToString();
         // Creating basic properties for the MESSAGE.
@@ -164,6 +166,14 @@ public class RpcClient : IDisposable {
             basicProperties: props,
             body: messageBytes);
         
+        var timeoutTask = Task.Delay(timeout).ContinueWith(_ => "TimeOut");
+        var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+
+        if (completedTask == timeoutTask) {
+            _pendingRequests.TryRemove(correlationId, out _);
+            throw new RpcTimeoutException("RPC request timed out.");
+        }
+
         // Returning the Task associated with the request.
        
         // Deserializing the response from the server.
