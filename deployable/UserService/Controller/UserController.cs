@@ -3,6 +3,7 @@ using Messages.User.Dto;
 using Messages.User.Request;
 using Messages.User.Response;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using Newtonsoft.Json;
 using Polly;
 using Polly.CircuitBreaker;
@@ -15,10 +16,11 @@ namespace UserService.Controller;
 public class UserController : ControllerBase {
     private readonly RpcClient _rpcClient;
     private readonly IAsyncPolicy<HttpResponseMessage> _policies;
-
-    public UserController(RpcClient rpcClient, IAsyncPolicy<HttpResponseMessage> policies) {
+    private readonly IHttpClientFactory _clientFactory;
+    public UserController(RpcClient rpcClient, IAsyncPolicy<HttpResponseMessage> policies,IHttpClientFactory httpClientFactory) {
         _rpcClient = rpcClient;
         _policies = policies;
+        _clientFactory = httpClientFactory;
     }
     
     [HttpGet("{phoneNumber}")]
@@ -49,8 +51,14 @@ public class UserController : ControllerBase {
         }
         catch (BrokenCircuitException)
         {
-            Monitoring.Monitoring.Log.Error("GetUserByPhoneNumber::Circuit breaker is open, request aborted.");
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Service is temporarily unavailable. Please try again later.");
+            Monitoring.Monitoring.Log.Error("GetUserByPhoneNumber::Circuit breaker is open, fallback startegy launched.");
+            var client = _clientFactory.CreateClient("UserRepoHTTP");
+            var response = await client.GetAsync($"http://user-repo:8080/user/{phoneNumber}");
+            
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var result = System.Text.Json.JsonSerializer.Deserialize<double>(jsonResponse,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return Ok(result);
         }
         catch (RpcTimeoutException)
         {
@@ -82,8 +90,13 @@ public class UserController : ControllerBase {
         }
         catch (BrokenCircuitException)
         {
-            Monitoring.Monitoring.Log.Error("GetAllUsers::Circuit breaker is open, request aborted.");
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Service is temporarily unavailable. Please try again later.");
+            Monitoring.Monitoring.Log.Error("GetAllUsers::Circuit breaker is open, request aborted, implementing fallback strategy.");
+            var client = _clientFactory.CreateClient("UserRepoHTTP");
+            var response = await client.GetAsync($"http://user-repo:8080/GetAllUsers");
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var result = System.Text.Json.JsonSerializer.Deserialize<double>(jsonResponse,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return Ok(result);
         }
         catch (RpcTimeoutException)
         {
@@ -122,8 +135,16 @@ public class UserController : ControllerBase {
         }
         catch (BrokenCircuitException)
         {
-            Monitoring.Monitoring.Log.Error("Create::Circuit breaker is open, request aborted.");
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, "Service is temporarily unavailable. Please try again later.");
+            Monitoring.Monitoring.Log.Error("Create::Circuit breaker is open, request aborted, implementing fallback strategy.");
+            var client = _clientFactory.CreateClient("UserRepoHTTP");
+            var jsonRequest = System.Text.Json.JsonSerializer.Serialize(dto);
+            var content = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
+            var response = await client.PostAsync($"http://user-repo:8080/user", content);
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var result = System.Text.Json.JsonSerializer.Deserialize<double>(jsonResponse,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            
+            return Ok(result);
         }
         catch (RpcTimeoutException)
         {

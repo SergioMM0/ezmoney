@@ -10,12 +10,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+
+// HERE we add the IHttpClientFactory
+builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("UserRepoHTTP", client => {
+    client.BaseAddress = new Uri("http://user-repo:8080");
+});
 // HTTP Circuit breakers
 
 var retryPolicy = HttpPolicyExtensions
     .HandleTransientHttpError()
     .Or<RpcTimeoutException>()
-    .WaitAndRetryAsync(1, retryAttempt => TimeSpan.FromMicroseconds(Math.Pow(2, retryAttempt)), onRetry: (outcome, timespan, retryAttempt, context) =>
+    .WaitAndRetryAsync(1, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), onRetry: (outcome, timespan, retryAttempt, context) =>
     {
         Console.WriteLine($"Retrying... attempt {retryAttempt}");
     });
@@ -23,7 +29,7 @@ var retryPolicy = HttpPolicyExtensions
 var circuitBreakerPolicy = HttpPolicyExtensions
     .HandleTransientHttpError()
     .Or<RpcTimeoutException>()
-    .CircuitBreakerAsync(1, TimeSpan.FromMicroseconds(5), onBreak: (outcome, timespan) =>
+    .CircuitBreakerAsync(1, TimeSpan.FromSeconds(30), onBreak: (outcome, timespan) =>
     {
         Console.WriteLine("Circuit breaker opened!");
     }, onReset: () =>
@@ -31,12 +37,12 @@ var circuitBreakerPolicy = HttpPolicyExtensions
         Console.WriteLine("Circuit breaker reset!");
     });
 
-var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromMicroseconds(5), (context, timeSpan, task) => {
+var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(30), (context, timeSpan, task) => {
     return Task.FromException<HttpResponseMessage>(new RpcTimeoutException("Request timed out."));
 });
 
 // Wrapping the policies in the correct order: timeoutPolicy should be the outermost
-var policies = Policy.WrapAsync(timeoutPolicy, retryPolicy, circuitBreakerPolicy);
+var policies = Policy.WrapAsync( retryPolicy, circuitBreakerPolicy,timeoutPolicy);
 builder.Services.AddSingleton<IAsyncPolicy<HttpResponseMessage>>(policies);
 
 
