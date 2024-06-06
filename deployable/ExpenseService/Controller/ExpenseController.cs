@@ -51,7 +51,7 @@ public class ExpenseController : ControllerBase {
         {
             Monitoring.Monitoring.Log.Error("GetExpensesFromUser::Circuit breaker is open, fallback strategy launched.");
             var client = _clientFactory.CreateClient("ExpenseRepoHTTP");
-            var response = await client.GetAsync($"http://expense-repo:8080/expense/{groupId}/user/{userId}");
+            var response = await client.GetAsync($"http://expense-repo:6000/repository/expense/{groupId}/user/{userId}");
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var result = System.Text.Json.JsonSerializer.Deserialize<List<ExpenseResponse>>(jsonResponse,
@@ -150,7 +150,7 @@ public class ExpenseController : ControllerBase {
             var client = _clientFactory.CreateClient("ExpenseRepoHTTP");
             var jsonRequest = System.Text.Json.JsonSerializer.Serialize(request);
             var content = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"http://expense-repo:8080/expense", content);
+            var response = await client.PostAsync($"http://expense-repo:6000/expense", content);
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var result = System.Text.Json.JsonSerializer.Deserialize<ExpenseResponse>(jsonResponse,
