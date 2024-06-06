@@ -15,18 +15,28 @@ builder.Services.AddControllers();
 var retryPolicy = HttpPolicyExtensions
     .HandleTransientHttpError()
     .Or<RpcTimeoutException>()
-    .WaitAndRetryAsync(1, retryAttempt => TimeSpan.FromMicroseconds(Math.Pow(2, retryAttempt)));
+    .WaitAndRetryAsync(1, retryAttempt => TimeSpan.FromMicroseconds(Math.Pow(2, retryAttempt)), onRetry: (outcome, timespan, retryAttempt, context) =>
+    {
+        Console.WriteLine($"Retrying... attempt {retryAttempt}");
+    });
 
 var circuitBreakerPolicy = HttpPolicyExtensions
     .HandleTransientHttpError()
     .Or<RpcTimeoutException>()
-    .CircuitBreakerAsync(1, TimeSpan.FromMicroseconds(1));
+    .CircuitBreakerAsync(1, TimeSpan.FromMicroseconds(5), onBreak: (outcome, timespan) =>
+    {
+        Console.WriteLine("Circuit breaker opened!");
+    }, onReset: () =>
+    {
+        Console.WriteLine("Circuit breaker reset!");
+    });
 
-var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromMicroseconds(1), (context, timeSpan, task) => {
+var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromMicroseconds(5), (context, timeSpan, task) => {
     return Task.FromException<HttpResponseMessage>(new RpcTimeoutException("Request timed out."));
 });
 
-var policies = Policy.WrapAsync(retryPolicy, circuitBreakerPolicy, timeoutPolicy);
+// Wrapping the policies in the correct order: timeoutPolicy should be the outermost
+var policies = Policy.WrapAsync(timeoutPolicy, retryPolicy, circuitBreakerPolicy);
 builder.Services.AddSingleton<IAsyncPolicy<HttpResponseMessage>>(policies);
 
 
@@ -50,3 +60,4 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.Run();
+

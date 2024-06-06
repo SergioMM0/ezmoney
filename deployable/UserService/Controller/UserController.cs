@@ -115,6 +115,8 @@ public class UserController : ControllerBase {
             });
 
             var responseContent = await response.Content.ReadAsStringAsync();
+            if (responseContent.Contains("RPC request timed out"))
+                throw new RpcTimeoutException("Error creating user: RPC request timed out.");
             var user = JsonConvert.DeserializeObject<UserResponse>(responseContent);
             return Ok(user);
         }
@@ -125,7 +127,7 @@ public class UserController : ControllerBase {
         }
         catch (RpcTimeoutException)
         {
-            return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
+            return StatusCode(StatusCodes.Status408RequestTimeout, "RPC response : Request timed out");
         }
         catch (Exception e)
         {
