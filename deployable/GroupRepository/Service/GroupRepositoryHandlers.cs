@@ -32,6 +32,7 @@ public class GroupRepositoryHandlers : IRequestHandler {
     private string HandleCreateGroup(object data) {
         try {
             var groupDto = JsonConvert.DeserializeObject<CreateGroupReq>(data.ToString()!);
+            Monitoring.Monitoring.Log.Debug($"GroupRepositoryHandlers: HandleCreateGroup : CreateGroupReq: {groupDto}");
             var groupAdded = _groupRepositoryService.Add(groupDto!);
             var response = new ApiResponse { Success = true, Data = JsonConvert.SerializeObject(groupAdded) };
             return JsonConvert.SerializeObject(response);
