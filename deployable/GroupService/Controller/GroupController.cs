@@ -56,7 +56,7 @@ public class GroupController : ControllerBase {
         {
             Monitoring.Monitoring.Log.Error("GetAllGroupsOfUser::Circuit breaker is open, fallback strategy launched.");
             var client = _clientFactory.CreateClient("GroupRepoHTTP");
-            var response = await client.GetAsync($"http://group-repo:8080/{userId}/groups");
+            var response = await client.GetAsync($"http://group-repo:8080/GroupRepository/GetGroupsFromUser?userId={userId}");
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var result = System.Text.Json.JsonSerializer.Deserialize<List<GroupResponse>>(jsonResponse,
@@ -105,11 +105,14 @@ public class GroupController : ControllerBase {
         }
         catch (BrokenCircuitException)
         {
+            
             Monitoring.Monitoring.Log.Error("GetById::Circuit breaker is open, fallback strategy launched.");
             var client = _clientFactory.CreateClient("GroupRepoHTTP");
-            var response = await client.GetAsync($"http://group-repo:8080/group/{groupId}");
+            //Send a GET request with groupRequest as the body
+            var response = await client.GetAsync($"http://group-repo:8080/GroupRepository/GetGroupById?groupId={groupId}");
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
+            Monitoring.Monitoring.Log.Debug("Response content (string): " + jsonResponse);
             var result = System.Text.Json.JsonSerializer.Deserialize<GroupResponse>(jsonResponse,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             return Ok(result);
@@ -122,7 +125,7 @@ public class GroupController : ControllerBase {
         {
             Monitoring.Monitoring.Log.Error("Error getting group by id");
             Console.WriteLine(e);
-            return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
         }
     }
 
@@ -132,13 +135,13 @@ public class GroupController : ControllerBase {
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
     public async Task<ActionResult<GroupResponse>> Create([FromBody] PostGroup request) {
-        try {
+    try {
             var createGroupReq = new CreateGroupReq() {
                 OwnerId = request.OwnerId,
                 Name = request.Name,
                 Token = GenerateGroupToken()
             };
-
+            
             var response = await _policies.ExecuteAsync(async () =>
             {
                 var rpcResponse = await _rpcClient.CallAsync(Operation.CreateGroup, createGroupReq);
@@ -149,18 +152,25 @@ public class GroupController : ControllerBase {
             });
 
             var responseContent = await response.Content.ReadAsStringAsync();
+            Monitoring.Monitoring.Log.Debug("Response content (string): " + responseContent);
             var group = JsonConvert.DeserializeObject<GroupResponse>(responseContent);
             return Ok(group);
         }
         catch (BrokenCircuitException)
         {
             Monitoring.Monitoring.Log.Error("Create::Circuit breaker is open, fallback strategy launched.");
+            var createGroupReq = new CreateGroupReq() {
+                OwnerId = request.OwnerId,
+                Name = request.Name,
+                Token = GenerateGroupToken()
+            };
             var client = _clientFactory.CreateClient("GroupRepoHTTP");
-            var jsonRequest = System.Text.Json.JsonSerializer.Serialize(request);
+            var jsonRequest = System.Text.Json.JsonSerializer.Serialize(createGroupReq);
             var content = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"http://group-repo:8080/group", content);
+            var response = await client.PostAsync($"http://group-repo:8080/GroupRepository/AddGroup", content);
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
+            Monitoring.Monitoring.Log.Debug("Response content (string): " + jsonResponse);
             var result = System.Text.Json.JsonSerializer.Deserialize<GroupResponse>(jsonResponse,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
@@ -174,7 +184,7 @@ public class GroupController : ControllerBase {
         {
             Monitoring.Monitoring.Log.Error("Error creating group");
             Console.WriteLine(e);
-            return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
         }
     }
 
@@ -208,7 +218,7 @@ public class GroupController : ControllerBase {
             var client = _clientFactory.CreateClient("GroupRepoHTTP");
             var jsonRequest = System.Text.Json.JsonSerializer.Serialize(request);
             var content = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"http://group-repo:8080/group/join", content);
+            var response = await client.PostAsync($"http://group-repo:8080/GroupRepository/JoinGroup", content);
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
             return Ok(jsonResponse);

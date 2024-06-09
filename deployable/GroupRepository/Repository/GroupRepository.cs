@@ -58,6 +58,7 @@ public class GroupRepository : IGroupRepository {
             // Return the newly created group
             return newGroup;
         } catch (Exception ex) {
+            Monitoring.Monitoring.Log.Error("An error occurred while adding the group.", ex.Message);
             throw new ApplicationException("An error occurred while adding the group.", ex);
         }
     }
@@ -77,10 +78,11 @@ public class GroupRepository : IGroupRepository {
     }
 
     public Group GetGroupById(GroupByIdRequest group) {
-       
+       Monitoring.Monitoring.Log.Information($"GroupRepository:GetGroupById:Getting group {group.GroupId}");
         try {
             return _context.GroupTable.AsNoTracking().FirstOrDefault(g => g.Id == group.GroupId) ?? throw new ApplicationException("Group not found.");
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("An error occurred while getting the group: " + e.Message);
             throw new ApplicationException("An error occurred while getting the group.", e);
         }
     }
@@ -103,7 +105,7 @@ public class GroupRepository : IGroupRepository {
     private void RecreateDB() {
         try {
             Console.WriteLine("Creating database...");
-            _context.Database.EnsureDeleted();
+            //_context.Database.EnsureDeleted();
             _context.Database.EnsureCreated();
         } catch (Exception e) {
             throw new ApplicationException("An error occurred while creating the database.", e);
