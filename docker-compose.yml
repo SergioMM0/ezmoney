@@ -130,7 +130,7 @@ services:
       context: .
       dockerfile: deployable/ExpenseRepository/Dockerfile
     ports:
-      - "6000:8080"
+      - "6001:8080"
     environment:
       - RABBITMQ_HOSTNAME=${RABBITMQ_HOSTNAME}
       - RABBITMQ_PORT=${RABBITMQ_PORT}
