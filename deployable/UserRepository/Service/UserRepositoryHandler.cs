@@ -1,5 +1,8 @@
 ﻿using Messages.User.Request;
 using Newtonsoft.Json;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
+using OpenTelemetry.Trace;
 using RPC;
 using RPC.Interfaces;
 
@@ -8,9 +11,11 @@ namespace UserRepository.Service;
 public class UserRepositoryHandlers : IRequestHandler {
     private readonly HandlerRegistry _registry;
     private readonly UserRepositoryService _userRepositoryService;
+    private readonly Tracer _tracer;
     
-    public UserRepositoryHandlers(UserRepositoryService userRepositoryService = null) {
-        _registry = new HandlerRegistry();
+    public UserRepositoryHandlers(Tracer tracer, UserRepositoryService userRepositoryService = null) {
+        _tracer = tracer;
+        _registry = new HandlerRegistry(tracer);
         _registry.RegisterHandler(Operation.CreateUser, HandleCreateUser);
         _registry.RegisterHandler(Operation.GetAllUsers, HandleGetAllUsers);
         _registry.RegisterHandler(Operation.GetUserByPhoneNumber, HandleGetUserByPhoneNumber);
@@ -19,6 +24,7 @@ public class UserRepositoryHandlers : IRequestHandler {
     }
 
     private string HandleCreateUser(object data) {
+        using var activity = _tracer.StartActiveSpan("HandleCreateUser");
         try {
             var user = JsonConvert.DeserializeObject<CreateUserReq>(data.ToString()!);
             var userAdded = _userRepositoryService.AddUser(user!);
@@ -58,6 +64,8 @@ public class UserRepositoryHandlers : IRequestHandler {
     }
 
     public string HandleRequest(Operation operation, object data) {
+        using var activity = _tracer.StartActiveSpan("HandleRequest - UserRepositoryHandler");
+        
         try {
             switch (operation) {
                 case Operation.CreateUser:

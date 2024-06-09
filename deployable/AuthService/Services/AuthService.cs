@@ -4,6 +4,7 @@ using Messages.User;
 using Messages.User.Request;
 using Messages.User.Response;
 using Microsoft.AspNetCore.Authentication;
+using OpenTelemetry.Trace;
 
 namespace AuthService.Services;
 
@@ -11,14 +12,20 @@ public class AuthService {
     private readonly JWTTokenService _jwtTokenService;
     private readonly AuthServiceConfiguration _config;
     private readonly HttpClient _client;
+    private readonly Tracer _tracer;
     
-    public AuthService(JWTTokenService jwtTokenService, AuthServiceConfiguration config, HttpClient client) {
+    public AuthService(JWTTokenService jwtTokenService, 
+        AuthServiceConfiguration config, 
+        HttpClient client,
+        Tracer tracer) {
         _jwtTokenService = jwtTokenService;
         _config = config;
         _client = client;
+        _tracer = tracer;
     }
     
     public async Task<string> Register(RegisterUserReq request) {
+        using var activity = _tracer.StartActiveSpan("Register - Service");
         // 1. Parse the RegisterUserReq to a CreateUserReq
         var createUserReq = new CreateUserReq {
             Name = request.Name,
@@ -40,6 +47,7 @@ public class AuthService {
     }
     
     public async Task<AuthenticationToken> Login(LoginUserReq request) {
+        using var activity = _tracer.StartActiveSpan("Login - Service");
         //1. Send HTTP request to user service to login a user
         var response = await _client.GetAsync(_config.GetUserByPhoneNumberUrl + request.PhoneNumber);
         if (!response.IsSuccessStatusCode) {

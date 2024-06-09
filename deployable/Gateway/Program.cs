@@ -3,10 +3,20 @@ using AuthService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Monitoring;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
+/* Tracer config **/
+var serviceName = "Gateway";
+var serviceVersion = "1.0.0";
+
+
+builder.Services.AddOpenTelemetry().Setup(serviceName, serviceVersion);
+builder.Services.AddSingleton(TracerProvider.Default.GetTracer(serviceName));
+/* End tracer config */
 // Auth
 builder.Services.AddAuthentication(options => {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

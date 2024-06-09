@@ -1,6 +1,10 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text;
 using Newtonsoft.Json;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
+using OpenTelemetry.Trace;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RPC.RpcFactory;
@@ -91,8 +95,11 @@ public class RpcClient : IDisposable {
 
     // Flag to track whether the object has been disposed.
     private bool _disposed;
+    
+    //Propagating the tracing context (optional)
+    private readonly Tracer? _tracer;
 
-    public RpcClient(string topic, IConnectionFactoryProvider factoryProvider) {
+    public RpcClient(string topic, IConnectionFactoryProvider factoryProvider, Tracer tracer = null) {
         // Retrieving the connection details from the factory provider.
         var factory = factoryProvider.GetConnectionFactory();
 
@@ -119,6 +126,8 @@ public class RpcClient : IDisposable {
             queue: _replyQueueName,
             autoAck: true
         );
+        
+        _tracer = tracer; // Optional
         // Event handler for processing incoming messages.
         // The event handler processes incoming messages by extracting the correlation ID from the message properties,
         // matching it to a pending request, and completing the associated TaskCompletionSource with the message payload.
@@ -131,6 +140,7 @@ public class RpcClient : IDisposable {
                 Console.WriteLine($"Correlation ID mismatch or response too late: {ea.BasicProperties.CorrelationId}");
             }
         };
+        
     }
     public Task<string> CallAsync(Operation operation, object data) {
         return CallAsync(operation, data, TimeSpan.FromSeconds(30)); // Default timeout of 30 seconds
@@ -144,6 +154,17 @@ public class RpcClient : IDisposable {
         props.CorrelationId = correlationId;
         // The replyTo property is set to the reply queue name.
         props.ReplyTo = _replyQueueName;
+        props.Headers = new Dictionary<string, object>();
+        // Propagating the tracing context (optional)
+        if (_tracer != null)
+        {
+            var activity = Activity.Current;
+            if (activity != null)
+            {
+                var propagator = new TraceContextPropagator();
+                propagator.Inject(new PropagationContext(activity.Context, Baggage.Current), props, (msg, key, value) => { msg.Headers.Add(key, value); });
+            }
+        }
         // Creating a request object with the operation and data.
         // data is the object that has been serialized by the controller it contains the necessary
         // information to perform the operation.
@@ -160,11 +181,22 @@ public class RpcClient : IDisposable {
         var tcs = new TaskCompletionSource<string>();
         _pendingRequests[correlationId] = tcs;
         // Publishing the message to the server.
-        _channel.BasicPublish(
-            exchange: "",
-            routingKey: _topic,
-            basicProperties: props,
-            body: messageBytes);
+        if (_tracer != null)
+        {
+            _channel.BasicPublish(
+                exchange: "",
+                routingKey: _topic,
+                basicProperties: props,
+                body: messageBytes);
+        }
+        else
+        {
+            _channel.BasicPublish(
+                exchange: "",
+                routingKey: _topic,
+                basicProperties: props,
+                body: messageBytes);
+        }
         
         var timeoutTask = Task.Delay(timeout).ContinueWith(_ => "TimeOut");
         var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
