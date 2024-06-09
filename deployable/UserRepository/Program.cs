@@ -13,7 +13,7 @@ using UserRepository.Service;
 var builder = WebApplication.CreateBuilder(args);
 
 /*** START OF TRACING CONFIGURATION ***/
-var serviceName = "UserRespository";
+var serviceName = "UserRepository";
 var serviceVersion = "1.0.0";
 
 builder.Services.AddOpenTelemetry().Setup(serviceName, serviceVersion);
