@@ -1,5 +1,7 @@
 ﻿using Messages.RPC;
 using Microsoft.Extensions.Options;
+using Monitoring;
+using OpenTelemetry.Trace;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
@@ -7,6 +9,14 @@ using RPC;
 using RPC.RpcFactory;
 
 var builder = WebApplication.CreateBuilder(args);
+/* Tracer config **/
+var serviceName = "ExpenseService";
+var serviceVersion = "1.0.0";
+
+
+builder.Services.AddOpenTelemetry().Setup(serviceName, serviceVersion);
+builder.Services.AddSingleton(TracerProvider.Default.GetTracer(serviceName));
+/* End tracer config */
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
