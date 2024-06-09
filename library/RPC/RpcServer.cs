@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using Newtonsoft.Json;
 using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
@@ -102,6 +103,8 @@ public class RpcServer : IDisposable {
             // The response is then serialized back to JSON format
             // Each Repository Service has its own concretization of IRequestHandler, which contains the logic to handle different operations
             if (_tracer != null) {
+                // Display the content of BasicProperties.Headers
+                Monitoring.Monitoring.Log.Debug("RpcServer: BasicProperties.Headers: {0}", ea.BasicProperties.Headers);
                 var propagatorExtract = new TraceContextPropagator();
                 var parentContext = propagatorExtract.Extract(default, ea.BasicProperties, (req, key) => {
                     return new List<string>(new[] {
@@ -109,9 +112,22 @@ public class RpcServer : IDisposable {
                     });
                 });
                 Baggage.Current = parentContext.Baggage;
-                using var consumerActivity = _tracer.StartActiveSpan("RpcServer - OnReceived");
+                Monitoring.Monitoring.Log.Debug("RpcServer: Parent context: {0}", parentContext);
+                using var consumerActivity = _tracer.StartActiveSpan("RpcServer - ConsumerActivity");
+                using var currentActivity = _tracer.StartActiveSpan("RpcServer - HandleRequest");
                 response = _requestHandler.HandleRequest(request!.Operation, request.Data);
+                // 
+                if (_tracer != null)
+                {
+                    using var activity = _tracer.StartActiveSpan("RpcServer:SendAsyncResponse");
+                    replyProps.Headers = new Dictionary<string, object>();
+                    var activityContext = activity?.Context ?? Activity.Current?.Context ?? default;
+                    var propagationContext = new PropagationContext(activityContext, Baggage.Current);
+                    var propagator = new TraceContextPropagator();
+                    propagator.Inject(propagationContext, replyProps, (msg, key, value) => { msg.Headers.Add(key, value); });
+                }
             } else {
+                Monitoring.Monitoring.Log.Debug("No tracer available");
                 response = _requestHandler.HandleRequest(request!.Operation, request.Data);
             }
 
@@ -120,6 +136,7 @@ public class RpcServer : IDisposable {
             Console.WriteLine("Error processing request: " + ex);
             response = JsonConvert.SerializeObject(new { error = $"Exception: {ex.Message}" });
         } finally {
+            Monitoring.Monitoring.Log.Debug("RpcServer: Sending response with BA Headers: {0}", replyProps.Headers);
             // Send the response back to the reply-to address using the correlation ID
             var responseBytes = Encoding.UTF8.GetBytes(response);
             _channel.BasicPublish(exchange: "", routingKey: props.ReplyTo, basicProperties: replyProps, body: responseBytes);

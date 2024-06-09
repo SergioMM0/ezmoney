@@ -99,7 +99,7 @@ public class RpcClient : IDisposable {
     //Propagating the tracing context (optional)
     private readonly Tracer? _tracer;
 
-    public RpcClient(string topic, IConnectionFactoryProvider factoryProvider, Tracer tracer = null) {
+    public RpcClient(string topic, IConnectionFactoryProvider factoryProvider, Tracer? tracer = null) {
         // Retrieving the connection details from the factory provider.
         var factory = factoryProvider.GetConnectionFactory();
 
@@ -134,6 +134,19 @@ public class RpcClient : IDisposable {
         // This mechanism ensures that responses are correctly matched to their corresponding requests.
         _consumer.Received += (_, ea) => {
             if (_pendingRequests.TryRemove(ea.BasicProperties.CorrelationId, out var tcs)) {
+                if (tracer != null) {
+                    Monitoring.Monitoring.Log.Debug("RpcClient: ea.BP.Headers {0}", ea.BasicProperties.Headers);
+                    var propagatorExtract = new TraceContextPropagator();
+                    var parentContext = propagatorExtract.Extract(default, ea.BasicProperties, (req, key) => {
+                        return new List<string>(new[] {
+                            req.Headers.ContainsKey(key) ? req.Headers[key].ToString() : String.Empty
+                        });
+                    });
+                    Baggage.Current = parentContext.Baggage;
+                    Monitoring.Monitoring.Log.Debug("RpcClient: Parent context: {0}", parentContext);
+                    using var consumerActivity = _tracer.StartActiveSpan("RpcClient - ConsumerActivity");
+                    using var activity = _tracer.StartActiveSpan("RpcClient - Received");
+                }
                 var response = Encoding.UTF8.GetString(ea.Body.ToArray());
                 tcs.SetResult(response);
             } else {
@@ -154,16 +167,15 @@ public class RpcClient : IDisposable {
         props.CorrelationId = correlationId;
         // The replyTo property is set to the reply queue name.
         props.ReplyTo = _replyQueueName;
-        props.Headers = new Dictionary<string, object>();
         // Propagating the tracing context (optional)
         if (_tracer != null)
         {
-            var activity = Activity.Current;
-            if (activity != null)
-            {
-                var propagator = new TraceContextPropagator();
-                propagator.Inject(new PropagationContext(activity.Context, Baggage.Current), props, (msg, key, value) => { msg.Headers.Add(key, value); });
-            }
+            using var activity = _tracer.StartActiveSpan("RpcClient:SendAsync");
+            props.Headers = new Dictionary<string, object>();
+            var activityContext = activity?.Context ?? Activity.Current?.Context ?? default;
+            var propagationContext = new PropagationContext(activityContext, Baggage.Current);
+            var propagator = new TraceContextPropagator();
+            propagator.Inject(propagationContext, props, (msg, key, value) => { msg.Headers.Add(key, value); });
         }
         // Creating a request object with the operation and data.
         // data is the object that has been serialized by the controller it contains the necessary
@@ -181,22 +193,11 @@ public class RpcClient : IDisposable {
         var tcs = new TaskCompletionSource<string>();
         _pendingRequests[correlationId] = tcs;
         // Publishing the message to the server.
-        if (_tracer != null)
-        {
-            _channel.BasicPublish(
-                exchange: "",
-                routingKey: _topic,
-                basicProperties: props,
-                body: messageBytes);
-        }
-        else
-        {
-            _channel.BasicPublish(
-                exchange: "",
-                routingKey: _topic,
-                basicProperties: props,
-                body: messageBytes);
-        }
+        _channel.BasicPublish(
+            exchange: "",
+            routingKey: _topic,
+            basicProperties: props,
+            body: messageBytes);
         
         var timeoutTask = Task.Delay(timeout).ContinueWith(_ => "TimeOut");
         var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
