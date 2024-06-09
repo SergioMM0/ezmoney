@@ -33,7 +33,7 @@ public class ExpenseController : ControllerBase {
                 UserId = userId,
                 GroupId = groupId
             };
-
+            
             var response = await _policies.ExecuteAsync(async () =>
             {
                 var rpcResponse = await _rpcClient.CallAsync(Operation.GetExpensesFromUserInGroup, request);
@@ -51,7 +51,7 @@ public class ExpenseController : ControllerBase {
         {
             Monitoring.Monitoring.Log.Error("GetExpensesFromUser::Circuit breaker is open, fallback strategy launched.");
             var client = _clientFactory.CreateClient("ExpenseRepoHTTP");
-            var response = await client.GetAsync($"http://expense-repo:8080/expense/{groupId}/user/{userId}");
+            var response = await client.GetAsync($"http://expense-repo:8080/ExpenseRepository/GetExpensesFromUser/{groupId}/User/{userId}");
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var result = System.Text.Json.JsonSerializer.Deserialize<List<ExpenseResponse>>(jsonResponse,
@@ -79,7 +79,7 @@ public class ExpenseController : ControllerBase {
             var request = new GetExpensesReq() {
                 GroupId = groupId
             };
-
+            
             var response = await _policies.ExecuteAsync(async () =>
             {
                 var rpcResponse = await _rpcClient.CallAsync(Operation.GetExpensesFromGroup, request);
@@ -97,7 +97,7 @@ public class ExpenseController : ControllerBase {
         {
             Monitoring.Monitoring.Log.Error("GetExpensesFromGroup::Circuit breaker is open, fallback strategy launched.");
             var client = _clientFactory.CreateClient("ExpenseRepoHTTP");
-            var response = await client.GetAsync($"http://expense-repo:8080/expense/{groupId}/expenses");
+            var response = await client.GetAsync($"http://expense-repo:8080/ExpenseRepository/GetExpensesFromGroup/{groupId}");
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var result = System.Text.Json.JsonSerializer.Deserialize<List<ExpenseResponse>>(jsonResponse,
@@ -150,7 +150,7 @@ public class ExpenseController : ControllerBase {
             var client = _clientFactory.CreateClient("ExpenseRepoHTTP");
             var jsonRequest = System.Text.Json.JsonSerializer.Serialize(request);
             var content = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"http://expense-repo:8080/expense", content);
+            var response = await client.PostAsync($"http://expense-repo:8080/ExpenseRepository/CreateExpense", content);
 
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var result = System.Text.Json.JsonSerializer.Deserialize<ExpenseResponse>(jsonResponse,

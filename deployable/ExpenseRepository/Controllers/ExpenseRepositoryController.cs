@@ -14,17 +14,24 @@ public class ExpenseRepositoryController : ControllerBase{
         _expenseRepositoryService = expenseRepositoryService;
     }
     
-    [HttpGet("GetExpensesFromUser")]
-    public ActionResult<List<ExpenseResponse>> GetExpensesFromUser(GetExpensesUserReq request){
+    [HttpGet("GetExpensesFromUser/{groupId}/User/{userId}")]
+    public ActionResult<List<ExpenseResponse>> GetExpensesFromUser([FromRoute] int groupId, [FromRoute] int userId){
         try{
+            var request = new GetExpensesUserReq(){
+                UserId = userId,
+                GroupId = groupId
+            };
             return Ok(_expenseRepositoryService.GetExpensesFromUser(request));
         } catch (Exception e){
             return BadRequest(e.Message);
         }
     }
-    [HttpGet("GetExpensesFromGroup")]
-    public ActionResult<List<ExpenseResponse>> GetExpensesFromGroup(GetExpensesReq request){
+    [HttpGet("GetExpensesFromGroup/{groupId}")]
+    public ActionResult<List<ExpenseResponse>> GetExpensesFromGroup([FromRoute] int groupId){
         try{
+            var request = new GetExpensesReq(){
+                GroupId = groupId
+            };
             return Ok(_expenseRepositoryService.GetExpensesFromGroup(request));
         } catch (Exception e){
             return BadRequest(e.Message);
