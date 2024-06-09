@@ -1,6 +1,7 @@
 ﻿using Messages.RPC;
 using Microsoft.Extensions.Options;
 using Polly;
+using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
 using RPC;
 using RPC.RpcFactory;
@@ -32,6 +33,7 @@ var circuitBreakerPolicy = HttpPolicyExtensions
     .CircuitBreakerAsync(1, TimeSpan.FromSeconds(30), onBreak: (outcome, timespan) =>
     {
         Monitoring.Monitoring.Log.Warning("UserService::Circuit breaker opened!");
+        throw new BrokenCircuitException("Circuit breaker opened!"); // Policy implementer will handle this exception
     }, onReset: () =>
     {
         Monitoring.Monitoring.Log.Information("UserService::Circuit breaker reset!");

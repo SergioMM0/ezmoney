@@ -147,10 +147,6 @@ public class UserController : ControllerBase {
             
             return Ok(result);
         }
-        catch (RpcTimeoutException)
-        {
-            return StatusCode(StatusCodes.Status408RequestTimeout, "RPC response : Request timed out");
-        }
         catch (Exception e)
         {
             Monitoring.Monitoring.Log.Error("Error creating user");
