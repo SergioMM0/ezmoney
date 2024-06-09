@@ -118,9 +118,12 @@ public class UserController : ControllerBase {
                 PhoneNumber = dto.PhoneNumber
             };
 
+            Monitoring.Monitoring.Log.Information("Create::Creating user...");
             var response = await _policies.ExecuteAsync(async () =>
             {
+                Monitoring.Monitoring.Log.Verbose("Create::Calling RPC...");
                 var rpcResponse = await _rpcClient.CallAsync(Operation.CreateUser, request);
+                Monitoring.Monitoring.Log.Verbose("Create::RPC response received.");
                 return new HttpResponseMessage()
                 {
                     Content = new StringContent(rpcResponse)
@@ -128,8 +131,6 @@ public class UserController : ControllerBase {
             });
 
             var responseContent = await response.Content.ReadAsStringAsync();
-            if (responseContent.Contains("RPC request timed out"))
-                throw new RpcTimeoutException("Error creating user: RPC request timed out.");
             var user = JsonConvert.DeserializeObject<UserResponse>(responseContent);
             return Ok(user);
         }

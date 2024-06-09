@@ -21,28 +21,29 @@ builder.Services.AddHttpClient("UserRepoHTTP", client => {
 var retryPolicy = HttpPolicyExtensions
     .HandleTransientHttpError()
     .Or<RpcTimeoutException>()
-    .WaitAndRetryAsync(1, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), onRetry: (outcome, timespan, retryAttempt, context) =>
-    {
-        Console.WriteLine($"Retrying... attempt {retryAttempt}");
-    });
+    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+        onRetry: (outcome, timespan, retryAttempt, context) => {
+            Monitoring.Monitoring.Log.Information($"Retrying... attempt {retryAttempt}");
+        });
 
 var circuitBreakerPolicy = HttpPolicyExtensions
     .HandleTransientHttpError()
     .Or<RpcTimeoutException>()
     .CircuitBreakerAsync(1, TimeSpan.FromSeconds(30), onBreak: (outcome, timespan) =>
     {
-        Console.WriteLine("Circuit breaker opened!");
+        Monitoring.Monitoring.Log.Warning("UserService::Circuit breaker opened!");
     }, onReset: () =>
     {
-        Console.WriteLine("Circuit breaker reset!");
+        Monitoring.Monitoring.Log.Information("UserService::Circuit breaker reset!");
     });
 
 var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(30), (context, timeSpan, task) => {
+    Monitoring.Monitoring.Log.Error("TimeoutPolicy::request timed out.");
     return Task.FromException<HttpResponseMessage>(new RpcTimeoutException("Request timed out."));
 });
 
 // Wrapping the policies in the correct order: timeoutPolicy should be the outermost
-var policies = Policy.WrapAsync( retryPolicy, circuitBreakerPolicy,timeoutPolicy);
+var policies = Policy.WrapAsync( circuitBreakerPolicy, retryPolicy, timeoutPolicy);
 builder.Services.AddSingleton<IAsyncPolicy<HttpResponseMessage>>(policies);
 
 
