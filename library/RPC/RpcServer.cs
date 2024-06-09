@@ -1,5 +1,8 @@
 ﻿using System.Text;
 using Newtonsoft.Json;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
+using OpenTelemetry.Trace;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RPC.Interfaces;
@@ -36,8 +39,9 @@ public class RpcServer : IDisposable {
     // Flag to track if the object has been disposed
     private bool _disposed;
 
+    private Tracer? _tracer;
 
-    public RpcServer(string topic, IRequestHandler handler, IConnectionFactoryProvider factoryProvider) {
+    public RpcServer(string topic, IRequestHandler handler, IConnectionFactoryProvider factoryProvider, Tracer? tracer = null) {
         // Obtain a connection factory from the provided factory provider
         var factory = factoryProvider.GetConnectionFactory();
         // Create connection and channel using the factory
@@ -49,6 +53,8 @@ public class RpcServer : IDisposable {
         // Set quality of service settings for the channel
         _channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
         _channel.BasicQos(0, 1, false);
+        // Set the tracer for the server
+        _tracer = tracer;
         // Create a consumer that triggers an event when messages are received:
         // The 'EventingBasicConsumer' is a type of consumer provided by RabbitMQ's client library that uses event-driven logic to handle messages.
         // Unlike other types of consumers which might involve continuous polling or other more resource-intensive patterns, the EventingBasicConsumer
@@ -95,7 +101,20 @@ public class RpcServer : IDisposable {
             // The request handler processes the request based on the operation type and returns a response
             // The response is then serialized back to JSON format
             // Each Repository Service has its own concretization of IRequestHandler, which contains the logic to handle different operations
-            response = _requestHandler.HandleRequest(request!.Operation, request.Data);
+            if (_tracer != null) {
+                var propagatorExtract = new TraceContextPropagator();
+                var parentContext = propagatorExtract.Extract(default, ea.BasicProperties, (req, key) => {
+                    return new List<string>(new[] {
+                        req.Headers.ContainsKey(key) ? req.Headers[key].ToString() : String.Empty
+                    });
+                });
+                Baggage.Current = parentContext.Baggage;
+                using var consumerActivity = _tracer.StartActiveSpan("RpcServer - OnReceived");
+                response = _requestHandler.HandleRequest(request!.Operation, request.Data);
+            } else {
+                response = _requestHandler.HandleRequest(request!.Operation, request.Data);
+            }
+
         } catch (Exception ex) {
             // Log and serialize error information
             Console.WriteLine("Error processing request: " + ex);

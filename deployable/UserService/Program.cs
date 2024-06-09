@@ -1,5 +1,7 @@
 ﻿using Messages.RPC;
 using Microsoft.Extensions.Options;
+using Monitoring;
+using OpenTelemetry.Trace;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
@@ -7,6 +9,14 @@ using RPC;
 using RPC.RpcFactory;
 
 var builder = WebApplication.CreateBuilder(args);
+
+/*** START OF TRACING CONFIGURATION ***/
+var serviceName = "UserService";
+var serviceVersion = "1.0.0";
+
+builder.Services.AddOpenTelemetry().Setup(serviceName, serviceVersion);
+builder.Services.AddSingleton(TracerProvider.Default.GetTracer(serviceName));
+/*** END OF TRACING CONFIGURATION ***/
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -55,7 +65,8 @@ builder.Services.Configure<Topics>(builder.Configuration.GetSection("RPCMessages
 builder.Services.AddSingleton<RpcClient>(provider =>
     new RpcClient(
         provider.GetRequiredService<IOptions<Topics>>().Value.Topic,
-        provider.GetRequiredService<IConnectionFactoryProvider>()
+        provider.GetRequiredService<IConnectionFactoryProvider>(),
+        TracerProvider.Default.GetTracer(serviceName) // Tracer to propagate context
     )
 );
 

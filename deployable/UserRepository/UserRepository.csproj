@@ -17,6 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\library\Monitoring\Monitoring.csproj" />
       <ProjectReference Include="..\..\library\RPC\RPC.csproj" />
       <ProjectReference Include="..\..\shared\Domain\Domain.csproj" />
       <ProjectReference Include="..\..\shared\Messages\Messages.csproj" />

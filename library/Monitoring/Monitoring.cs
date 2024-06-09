@@ -38,6 +38,7 @@ public static class Monitoring
                         .AddService(serviceName: serviceName, serviceVersion: serviceVersion))
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
+                .AddSource("RabbitMQ.Client")
                 .AddConsoleExporter();
         });
     }
