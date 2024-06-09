@@ -5,6 +5,7 @@ using Messages.User.Response;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using Newtonsoft.Json;
+using OpenTelemetry.Trace;
 using Polly;
 using Polly.CircuitBreaker;
 using RPC;
@@ -17,10 +18,15 @@ public class UserController : ControllerBase {
     private readonly RpcClient _rpcClient;
     private readonly IAsyncPolicy<HttpResponseMessage> _policies;
     private readonly IHttpClientFactory _clientFactory;
-    public UserController(RpcClient rpcClient, IAsyncPolicy<HttpResponseMessage> policies,IHttpClientFactory httpClientFactory) {
+    private readonly Tracer _tracer;
+    public UserController(RpcClient rpcClient, 
+        IAsyncPolicy<HttpResponseMessage> policies,
+        IHttpClientFactory httpClientFactory,
+        Tracer tracer) {
         _rpcClient = rpcClient;
         _policies = policies;
         _clientFactory = httpClientFactory;
+        _tracer = tracer;
     }
     
     [HttpGet("{phoneNumber}")]
@@ -112,6 +118,7 @@ public class UserController : ControllerBase {
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] PostUser dto) {
+        using var activity = _tracer.StartActiveSpan("Create");
         try {
             var request = new CreateUserReq() {
                 Name = dto.Name,

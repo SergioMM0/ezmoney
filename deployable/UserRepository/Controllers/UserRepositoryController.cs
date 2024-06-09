@@ -1,6 +1,7 @@
 ﻿using Messages.User.Request;
 using Messages.User.Response;
 using Microsoft.AspNetCore.Mvc;
+using OpenTelemetry.Trace;
 using UserRepository.Service;
 
 namespace UserRepository.Controllers; 
@@ -9,8 +10,10 @@ namespace UserRepository.Controllers;
 [Route("[controller]")]
 public class UserRepositoryController : ControllerBase{
     private readonly UserRepositoryService _userRepositoryService;
-    public UserRepositoryController(UserRepositoryService userRepositoryService){
+    private readonly Tracer _tracer;
+    public UserRepositoryController(UserRepositoryService userRepositoryService, Tracer tracer){
         _userRepositoryService = userRepositoryService;
+        _tracer = tracer;
     }
     
     [HttpGet("GetUserByPhoneNumber")]
@@ -34,6 +37,7 @@ public class UserRepositoryController : ControllerBase{
     }
     [HttpPost("AddUser")]
     public ActionResult<UserResponse> AddUser(CreateUserReq request){
+        using var activity = _tracer.StartActiveSpan("AddUser");
         try{
             return Ok(_userRepositoryService.AddUser(request));
         } catch (Exception e){
