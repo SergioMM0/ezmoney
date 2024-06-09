@@ -53,10 +53,10 @@ public class UserController : ControllerBase {
         {
             Monitoring.Monitoring.Log.Error("GetUserByPhoneNumber::Circuit breaker is open, fallback startegy launched.");
             var client = _clientFactory.CreateClient("UserRepoHTTP");
-            var response = await client.GetAsync($"http://user-repo:8080/user/{phoneNumber}");
+            var response = await client.GetAsync($"http://user-repo:8080/UserRepository/GetUserByPhoneNumber?phoneNumber={phoneNumber}");
             
             var jsonResponse = await response.Content.ReadAsStringAsync();
-            var result = System.Text.Json.JsonSerializer.Deserialize<double>(jsonResponse,
+            var result = System.Text.Json.JsonSerializer.Deserialize<UserResponse>(jsonResponse,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             return Ok(result);
         }
@@ -92,9 +92,9 @@ public class UserController : ControllerBase {
         {
             Monitoring.Monitoring.Log.Error("GetAllUsers::Circuit breaker is open, request aborted, implementing fallback strategy.");
             var client = _clientFactory.CreateClient("UserRepoHTTP");
-            var response = await client.GetAsync($"http://user-repo:8080/GetAllUsers");
+            var response = await client.GetAsync($"http://user-repo:8080/UserRepository/GetAllUsers");
             var jsonResponse = await response.Content.ReadAsStringAsync();
-            var result = System.Text.Json.JsonSerializer.Deserialize<double>(jsonResponse,
+            var result = System.Text.Json.JsonSerializer.Deserialize<List<UserResponse>>(jsonResponse,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             return Ok(result);
         }
@@ -117,7 +117,7 @@ public class UserController : ControllerBase {
                 Name = dto.Name,
                 PhoneNumber = dto.PhoneNumber
             };
-
+            
             Monitoring.Monitoring.Log.Information("Create::Creating user...");
             var response = await _policies.ExecuteAsync(async () =>
             {
@@ -140,12 +140,16 @@ public class UserController : ControllerBase {
             var client = _clientFactory.CreateClient("UserRepoHTTP");
             var jsonRequest = System.Text.Json.JsonSerializer.Serialize(dto);
             var content = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"http://user-repo:8080/user", content);
+            var response = await client.PostAsync("http://user-repo:8080/UserRepository/AddUser", content);
             var jsonResponse = await response.Content.ReadAsStringAsync();
-            var result = System.Text.Json.JsonSerializer.Deserialize<double>(jsonResponse,
+            var result = System.Text.Json.JsonSerializer.Deserialize<UserResponse>(jsonResponse,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             
             return Ok(result);
+        }
+        catch (RpcTimeoutException)
+        {
+            return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
         }
         catch (Exception e)
         {
