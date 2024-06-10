@@ -65,6 +65,7 @@ public class GroupController : ControllerBase {
         }
         catch (RpcTimeoutException)
         {
+            Monitoring.Monitoring.Log.Error("GetAllGroupsOfUser::Request timed out");
             return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
         }
         catch (Exception e)
@@ -119,6 +120,7 @@ public class GroupController : ControllerBase {
         }
         catch (RpcTimeoutException)
         {
+            Monitoring.Monitoring.Log.Error("GetById::Request timed out");
             return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
         }
         catch (Exception e)
@@ -178,6 +180,7 @@ public class GroupController : ControllerBase {
         }
         catch (RpcTimeoutException)
         {
+            Monitoring.Monitoring.Log.Error("Create::Request timed out");
             return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
         }
         catch (Exception e)
@@ -225,6 +228,7 @@ public class GroupController : ControllerBase {
         }
         catch (RpcTimeoutException)
         {
+            Monitoring.Monitoring.Log.Error("Join::Request timed out");
             return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
         }
         catch (Exception e)

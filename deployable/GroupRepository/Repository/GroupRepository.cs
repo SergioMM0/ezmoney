@@ -14,7 +14,13 @@ public class GroupRepository : IGroupRepository {
     }
 
     public List<Group> GetAllGroups() {
-        return _context.GroupTable.AsNoTracking().ToList();
+        try {
+            return _context.GroupTable.AsNoTracking().ToList();
+        } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("An error occurred while getting the groups: " + e.Message);
+            throw new ApplicationException("An error occurred while getting the groups.", e);
+        }
+       
     }
 
     public List<Group> GetGroupsFromUser(int userId) {
@@ -29,16 +35,23 @@ public class GroupRepository : IGroupRepository {
                 .AsNoTracking()
                 .ToList();
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("An error occurred while getting the groups from User : " + e.Message);
             throw new ApplicationException("An error occurred while getting the groups.", e);
         }
     }
     
     public Group? GetGroupByToken(string token) {
-        var group = _context.GroupTable.AsNoTracking().FirstOrDefault(g => g.Token == token);
-        if (group != null) {
-            _context.Entry(group).State = EntityState.Detached;
+        try {
+            var group = _context.GroupTable.AsNoTracking().FirstOrDefault(g => g.Token == token);
+            if (group != null) {
+                _context.Entry(group).State = EntityState.Detached;
+            }
+            return group;
+        } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("An error occurred while getting the group by token: " + e.Message);
+            throw new ApplicationException("An error occurred while getting the group by token.", e);
         }
-        return group;
+        
     }
 
     public Group AddGroup(CreateGroupReq group) {
@@ -51,10 +64,10 @@ public class GroupRepository : IGroupRepository {
             // Add group object to the DB
             _context.GroupTable.Add(newGroup);
             _context.SaveChanges();
-
+            Monitoring.Monitoring.Log.Information($"Group {newGroup.Id} {newGroup.Name} {newGroup.Token} added to the database");
             // Add UserGroup object to DB to link the user to the group
             AddUserToGroup(group.OwnerId, newGroup.Id);
-
+            
             // Return the newly created group
             return newGroup;
         } catch (Exception ex) {
@@ -73,6 +86,7 @@ public class GroupRepository : IGroupRepository {
             AddUserToGroup(requestUserId, group.Id);
             
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("An error occurred while joining the group: " + e.Message);
             throw new ApplicationException("An error occurred while joining the group.", e);
         }
     }
@@ -95,7 +109,9 @@ public class GroupRepository : IGroupRepository {
             };
             _context.UserGroupTable.Add(userGroup);
             _context.SaveChanges();
+            Monitoring.Monitoring.Log.Information($"User {userId} added to group {groupId}");
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("An error occurred while adding the user to the group: " + e.Message);
             throw new ApplicationException("An error occurred while adding the user to the group.", e);
         }
     }
