@@ -3,14 +3,25 @@ using ExpenseRepository.Service;
 using Messages.RPC;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Monitoring;
+using OpenTelemetry.Trace;
 using RPC.RpcFactory;
 
 var builder = WebApplication.CreateBuilder(args);
+/* Tracer config **/
+var serviceName = "ExpenseRepository";
+var serviceVersion = "1.0.0";
+
+
+builder.Services.AddOpenTelemetry().Setup(serviceName, serviceVersion);
+builder.Services.AddSingleton(TracerProvider.Default.GetTracer(serviceName));
+/* End tracer config */
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
 // Configure topics
 builder.Services.Configure<Topics>(builder.Configuration.GetSection("RPCMessages"));
 builder.Services.AddSingleton<Topics>(sp =>
@@ -21,20 +32,17 @@ builder.Services.AddDbContext<ExpenseRepositoryContext>(options =>
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository.Repository.ExpenseRepository>();
 builder.Services.AddScoped<ExpenseRepositoryService>();
 builder.Services.AddScoped<ExpenseRepositoryHandlers>();
-builder.Services.AddHostedService<RpcBackgroundService>();
+Thread thread = new Thread(() => builder.Services.AddHostedService<RpcBackgroundService>());
+thread.Start();
 
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment()) {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
-app.UseHttpsRedirection();
-
-
+app.UseSwagger();
+app.UseSwaggerUI();
+app.MapControllers();
 app.Run();
 
 

@@ -1,6 +1,10 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text;
 using Newtonsoft.Json;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
+using OpenTelemetry.Trace;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RPC.RpcFactory;
@@ -91,8 +95,11 @@ public class RpcClient : IDisposable {
 
     // Flag to track whether the object has been disposed.
     private bool _disposed;
+    
+    //Propagating the tracing context (optional)
+    private readonly Tracer? _tracer;
 
-    public RpcClient(string topic, IConnectionFactoryProvider factoryProvider) {
+    public RpcClient(string topic, IConnectionFactoryProvider factoryProvider, Tracer? tracer = null) {
         // Retrieving the connection details from the factory provider.
         var factory = factoryProvider.GetConnectionFactory();
 
@@ -119,21 +126,39 @@ public class RpcClient : IDisposable {
             queue: _replyQueueName,
             autoAck: true
         );
+        
+        _tracer = tracer; // Optional
         // Event handler for processing incoming messages.
         // The event handler processes incoming messages by extracting the correlation ID from the message properties,
         // matching it to a pending request, and completing the associated TaskCompletionSource with the message payload.
         // This mechanism ensures that responses are correctly matched to their corresponding requests.
         _consumer.Received += (_, ea) => {
             if (_pendingRequests.TryRemove(ea.BasicProperties.CorrelationId, out var tcs)) {
+                if (tracer != null) {
+                    var propagatorExtract = new TraceContextPropagator();
+                    var parentContext = propagatorExtract.Extract(default, ea.BasicProperties, (req, key) => {
+                        return new List<string>(new[] {
+                            req.Headers.ContainsKey(key) ? req.Headers[key].ToString() : String.Empty
+                        });
+                    });
+                    Baggage.Current = parentContext.Baggage;
+                    
+                    using var consumerActivity = _tracer.StartActiveSpan("RpcClient - ConsumerActivity");
+                    using var activity = _tracer.StartActiveSpan("RpcClient - Received");
+                }
                 var response = Encoding.UTF8.GetString(ea.Body.ToArray());
                 tcs.SetResult(response);
             } else {
+                Monitoring.Monitoring.Log.Error($"Correlation ID mismatch or response too late: {ea.BasicProperties.CorrelationId}");
                 Console.WriteLine($"Correlation ID mismatch or response too late: {ea.BasicProperties.CorrelationId}");
             }
         };
+        
     }
-
     public Task<string> CallAsync(Operation operation, object data) {
+        return CallAsync(operation, data, TimeSpan.FromSeconds(30)); // Default timeout of 30 seconds
+    }
+    public async Task<string> CallAsync(Operation operation, object data, TimeSpan timeout) {
         // Generating a unique correlation ID for the request.
         var correlationId = Guid.NewGuid().ToString();
         // Creating basic properties for the MESSAGE.
@@ -142,6 +167,16 @@ public class RpcClient : IDisposable {
         props.CorrelationId = correlationId;
         // The replyTo property is set to the reply queue name.
         props.ReplyTo = _replyQueueName;
+        // Propagating the tracing context (optional)
+        if (_tracer != null)
+        {
+            using var activity = _tracer.StartActiveSpan("RpcClient:SendAsync");
+            props.Headers = new Dictionary<string, object>();
+            var activityContext = activity?.Context ?? Activity.Current?.Context ?? default;
+            var propagationContext = new PropagationContext(activityContext, Baggage.Current);
+            var propagator = new TraceContextPropagator();
+            propagator.Inject(propagationContext, props, (msg, key, value) => { msg.Headers.Add(key, value); });
+        }
         // Creating a request object with the operation and data.
         // data is the object that has been serialized by the controller it contains the necessary
         // information to perform the operation.
@@ -152,7 +187,7 @@ public class RpcClient : IDisposable {
         //Messages sent to RabbitMQ must be in a format that can be reliably transmitted over the network and
         //understood by the message broker and any receiving clients. In the case of RabbitMQ, which is fundamentally agnostic
         //about the content of the messages, data must be transformed into a binary format—hence the byte array
-
+    
         var messageBytes = Encoding.UTF8.GetBytes(message);
         // Adding the correlation ID and the TaskCompletionSource to the pending requests dictionary.
         var tcs = new TaskCompletionSource<string>();
@@ -163,28 +198,37 @@ public class RpcClient : IDisposable {
             routingKey: _topic,
             basicProperties: props,
             body: messageBytes);
+        
+        var timeoutTask = Task.Delay(timeout).ContinueWith(_ => "TimeOut");
+        var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+
+        if (completedTask == timeoutTask) {
+            _pendingRequests.TryRemove(correlationId, out _);
+            Monitoring.Monitoring.Log.Error("RpcClient::CallAsync::Request timed out.");
+            throw new RpcTimeoutException("RPC request timed out.");
+        }
+
         // Returning the Task associated with the request.
-        return tcs.Task.ContinueWith(task => {
-            if (task.IsFaulted) {
-                throw task.Exception ?? new Exception("Task failed without an exception.");
-            }
-            // Deserializing the response from the server.
-            // The response from the server is deserialized from JSON to an ApiResponse object.
-            // The ApiResponse object contains the success status, error message, and data returned by the server.
-            // If the response indicates success, the data is returned to the caller.
-            // If the response indicates an error, an ApplicationException is thrown with the error message.
-            // This mechanism ensures that the caller receives the correct response data or an Exception from the RPC server.
-            // as normally the repository will return only a string.
+       
+        // Deserializing the response from the server.
+        // The response from the server is deserialized from JSON to an ApiResponse object.
+        // The ApiResponse object contains the success status, error message, and data returned by the server.
+        // If the response indicates success, the data is returned to the caller.
+        // If the response indicates an error, an ApplicationException is thrown with the error message.
+        // This mechanism ensures that the caller receives the correct response data or an Exception from the RPC server.
+        // as normally the repository will return only a string.
+    
+            
+        var result = await tcs.Task;
+        var response = JsonConvert.DeserializeObject<ApiResponse>(result);
+        if (!response.Success) {
+            Monitoring.Monitoring.Log.Error($"RpcClient::CallAsync::Error: {response.ErrorMessage}");
+            throw new ApplicationException(response.ErrorMessage);
+        }
 
-            var response = JsonConvert.DeserializeObject<ApiResponse>(task.Result);
-            if (!response.Success) {
-                throw new ApplicationException(response.ErrorMessage);
-            }
-
-            return response.Data;
-        });
+        return response.Data;
     }
-
+    
     // Disposing of the RpcClient object.
     // The Dispose method is called to release resources used by the RpcClient object.
     // This method ensures that the connection to the RabbitMQ server is closed and that the channel is disposed of properly.

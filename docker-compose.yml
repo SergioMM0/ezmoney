@@ -1,3 +1,4 @@
+version: '3.7'
 services:
   gateway:
     image: gateway
@@ -5,12 +6,15 @@ services:
       context: .
       dockerfile: deployable/Gateway/Dockerfile
     ports:
-      - "8080:8080"
+      - "8080-8082:8080"
     depends_on:
       - user-service
       - group-service
       - expense-service
       - auth-service
+    deploy:
+      mode: replicated
+      replicas: 3
   user-service:
     image: user-service
     build:
@@ -126,7 +130,7 @@ services:
       context: .
       dockerfile: deployable/ExpenseRepository/Dockerfile
     ports:
-      - "6000:8080"
+      - "6001:8080"
     environment:
       - RABBITMQ_HOSTNAME=${RABBITMQ_HOSTNAME}
       - RABBITMQ_PORT=${RABBITMQ_PORT}
@@ -136,3 +140,14 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - "9411:9411"
+  seq:
+    image: datalust/seq:latest
+    ports:
+      - "5341:5341" 
+      - "5342:80" 
+    environment:
+      ACCEPT_EULA: Y

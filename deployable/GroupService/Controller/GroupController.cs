@@ -3,7 +3,10 @@ using Messages.Group.Dto;
 using Messages.Group.Request;
 using Messages.Group.Response;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using Newtonsoft.Json;
+using Polly;
+using Polly.CircuitBreaker;
 using RPC;
 
 namespace GroupService.Controller;
@@ -12,18 +15,15 @@ namespace GroupService.Controller;
 [Route("group")]
 public class GroupController : ControllerBase {
     private readonly RpcClient _rpcClient;
+    private readonly IAsyncPolicy<HttpResponseMessage> _policies;
+    private readonly IHttpClientFactory _clientFactory;
 
-    public GroupController(RpcClient rpcClient) {
+    public GroupController(RpcClient rpcClient, IAsyncPolicy<HttpResponseMessage> policies, IHttpClientFactory httpClientFactory) {
         _rpcClient = rpcClient;
+        _policies = policies;
+        _clientFactory = httpClientFactory;
     }
 
-    /// <summary>
-    /// Retrieves all groups from a user based on userId.
-    /// <br/> - Sends a request through RPC to:
-    /// <br/> - GroupRepository
-    /// </summary>
-    /// <param name="userId"><see cref="int"/></param>
-    /// <returns>A <see cref="IActionResult"/> containing an <see cref="List{T}"/> of <see cref="GroupResponse"/> objects.</returns>
     [HttpGet("{userId}/groups")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<GroupResponse>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
@@ -35,28 +35,47 @@ public class GroupController : ControllerBase {
                 return BadRequest("Invalid user id");
             }
 
-            // Create request object to send to the group repository
             var groupsUserReq = new GroupsUserReq() {
                 UserId = userId
             };
 
-            // Fetches all groups from user
-            var groupResponse = await _rpcClient.CallAsync(Operation.GetGroupsFromUser, groupsUserReq);
-            var groups = JsonConvert.DeserializeObject<List<GroupResponse>>(groupResponse);
+            var response = await _policies.ExecuteAsync(async () =>
+            {
+                var rpcResponse = await _rpcClient.CallAsync(Operation.GetGroupsFromUser, groupsUserReq);
+                return new HttpResponseMessage()
+                {
+                    Content = new StringContent(rpcResponse)
+                };
+            });
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var groups = JsonConvert.DeserializeObject<List<GroupResponse>>(responseContent);
             return Ok(groups);
-        } catch (Exception e) {
+        }
+        catch (BrokenCircuitException)
+        {
+            Monitoring.Monitoring.Log.Error("GetAllGroupsOfUser::Circuit breaker is open, fallback strategy launched.");
+            var client = _clientFactory.CreateClient("GroupRepoHTTP");
+            var response = await client.GetAsync($"http://group-repo:8080/GroupRepository/GetGroupsFromUser?userId={userId}");
+
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var result = System.Text.Json.JsonSerializer.Deserialize<List<GroupResponse>>(jsonResponse,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return Ok(result);
+        }
+        catch (RpcTimeoutException)
+        {
+            Monitoring.Monitoring.Log.Error("GetAllGroupsOfUser::Request timed out");
+            return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
+        }
+        catch (Exception e)
+        {
+            Monitoring.Monitoring.Log.Error("Error getting groups from user");
             Console.WriteLine(e);
             return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
         }
     }
-    
-    /// <summary>
-    /// Retrieves a group by id.
-    /// <br/>- Sends a request through RPC to:
-    /// <br/>- GroupRepository
-    /// </summary>
-    /// <param name="groupId"><see cref="int"/></param>
-    /// <returns>An <see cref="IActionResult"/> of <see cref="GroupResponse"/></returns>
+
     [HttpGet("{groupId}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GroupResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
@@ -68,63 +87,110 @@ public class GroupController : ControllerBase {
                 return BadRequest("Invalid group id");
             }
 
-            // Create request object to send to the group repository
             var groupRequest = new GroupByIdRequest() {
                 GroupId = groupId
             };
 
-            // Fetch the group
-            var groupResponse = await _rpcClient.CallAsync(Operation.GetGroupById, groupRequest);
-            var group = JsonConvert.DeserializeObject<GroupResponse>(groupResponse);
+            var response = await _policies.ExecuteAsync(async () =>
+            {
+                var rpcResponse = await _rpcClient.CallAsync(Operation.GetGroupById, groupRequest);
+                return new HttpResponseMessage()
+                {
+                    Content = new StringContent(rpcResponse)
+                };
+            });
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var group = JsonConvert.DeserializeObject<GroupResponse>(responseContent);
             return Ok(group);
-        } catch (Exception e) {
+        }
+        catch (BrokenCircuitException)
+        {
+            
+            Monitoring.Monitoring.Log.Error("GetById::Circuit breaker is open, fallback strategy launched.");
+            var client = _clientFactory.CreateClient("GroupRepoHTTP");
+            //Send a GET request with groupRequest as the body
+            var response = await client.GetAsync($"http://group-repo:8080/GroupRepository/GetGroupById?groupId={groupId}");
+
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            Monitoring.Monitoring.Log.Debug("Response content (string): " + jsonResponse);
+            var result = System.Text.Json.JsonSerializer.Deserialize<GroupResponse>(jsonResponse,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return Ok(result);
+        }
+        catch (RpcTimeoutException)
+        {
+            Monitoring.Monitoring.Log.Error("GetById::Request timed out");
+            return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
+        }
+        catch (Exception e)
+        {
+            Monitoring.Monitoring.Log.Error("Error getting group by id");
             Console.WriteLine(e);
-            return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
         }
     }
 
-
-    /// <summary>
-    /// Process the request to create a new group.
-    /// <br/>- Sends a request through RPC to:
-    /// <br/>- GroupRepository
-    /// </summary>
-    /// <param name="request"><see cref="PostGroup"/></param>
-    /// <returns>An <see cref="IActionResult"/> of <see cref="GroupResponse"/></returns>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GroupResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
     public async Task<ActionResult<GroupResponse>> Create([FromBody] PostGroup request) {
-        try {
-
-            // Create request object to send to the group repository
+    try {
             var createGroupReq = new CreateGroupReq() {
                 OwnerId = request.OwnerId,
                 Name = request.Name,
                 Token = GenerateGroupToken()
             };
+            
+            var response = await _policies.ExecuteAsync(async () =>
+            {
+                var rpcResponse = await _rpcClient.CallAsync(Operation.CreateGroup, createGroupReq);
+                return new HttpResponseMessage()
+                {
+                    Content = new StringContent(rpcResponse)
+                };
+            });
 
-            // Sends the request to the group repository
-            var response = await _rpcClient.CallAsync(Operation.CreateGroup, createGroupReq);
-
-            // Deserializes the response and returns it
-            var group = JsonConvert.DeserializeObject<GroupResponse>(response);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Monitoring.Monitoring.Log.Debug("Response content (string): " + responseContent);
+            var group = JsonConvert.DeserializeObject<GroupResponse>(responseContent);
             return Ok(group);
+        }
+        catch (BrokenCircuitException)
+        {
+            Monitoring.Monitoring.Log.Error("Create::Circuit breaker is open, fallback strategy launched.");
+            var createGroupReq = new CreateGroupReq() {
+                OwnerId = request.OwnerId,
+                Name = request.Name,
+                Token = GenerateGroupToken()
+            };
+            var client = _clientFactory.CreateClient("GroupRepoHTTP");
+            var jsonRequest = System.Text.Json.JsonSerializer.Serialize(createGroupReq);
+            var content = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
+            var response = await client.PostAsync($"http://group-repo:8080/GroupRepository/AddGroup", content);
 
-        } catch (Exception e) {
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            Monitoring.Monitoring.Log.Debug("Response content (string): " + jsonResponse);
+            var result = System.Text.Json.JsonSerializer.Deserialize<GroupResponse>(jsonResponse,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return Ok(result);
+        }
+        catch (RpcTimeoutException)
+        {
+            Monitoring.Monitoring.Log.Error("Create::Request timed out");
+            return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
+        }
+        catch (Exception e)
+        {
+            Monitoring.Monitoring.Log.Error("Error creating group");
             Console.WriteLine(e);
-            return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
         }
     }
 
-    /// <summary>
-    /// Process the request to join a group.
-    /// <br/>- Sends a request through RPC to:
-    /// <br/>- GroupRepository
-    /// </summary>
-    /// <param name="request"><see cref="JoinGroupReq"/></param>
     [HttpPost("join")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
@@ -132,19 +198,42 @@ public class GroupController : ControllerBase {
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
     public async Task<IActionResult> Join([FromBody] JoinGroupReq request) {
         try {
-            // Create request object to send to the group repository
             var joinGroupReq = new JoinGroupReq() {
                 UserId = request.UserId,
                 Token = request.Token
             };
 
-            // Sends the request to the group repository
-            var response = await _rpcClient.CallAsync(Operation.JoinGroup, joinGroupReq);
-            var contentString = JsonConvert.DeserializeObject<string>(response);
+            var response = await _policies.ExecuteAsync(async () =>
+            {
+                var rpcResponse = await _rpcClient.CallAsync(Operation.JoinGroup, joinGroupReq);
+                return new HttpResponseMessage()
+                {
+                    Content = new StringContent(rpcResponse)
+                };
+            });
 
-            return Ok(contentString);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            return Ok(responseContent);
+        }
+        catch (BrokenCircuitException)
+        {
+            Monitoring.Monitoring.Log.Error("Join::Circuit breaker is open, fallback strategy launched.");
+            var client = _clientFactory.CreateClient("GroupRepoHTTP");
+            var jsonRequest = System.Text.Json.JsonSerializer.Serialize(request);
+            var content = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
+            var response = await client.PostAsync($"http://group-repo:8080/GroupRepository/JoinGroup", content);
 
-        } catch (Exception e) {
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            return Ok(jsonResponse);
+        }
+        catch (RpcTimeoutException)
+        {
+            Monitoring.Monitoring.Log.Error("Join::Request timed out");
+            return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
+        }
+        catch (Exception e)
+        {
+            Monitoring.Monitoring.Log.Error("Error joining group");
             Console.WriteLine(e);
             return StatusCode(StatusCodes.Status500InternalServerError, "Couldn't deserialize the response");
         }

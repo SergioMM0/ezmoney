@@ -1,5 +1,6 @@
 ﻿using Messages.Auth;
 using Microsoft.AspNetCore.Mvc;
+using OpenTelemetry.Trace;
 
 namespace AuthService.Controllers;
 
@@ -7,9 +8,11 @@ namespace AuthService.Controllers;
 [Route("auth")]
 public class AuthController : ControllerBase {
     private readonly Services.AuthService _service;
+    private readonly Tracer _tracer;
     
-    public AuthController(Services.AuthService service) {
+    public AuthController(Services.AuthService service, Tracer tracer) {
         _service = service;
+        _tracer = tracer;
     }
     
     /// <summary>
@@ -22,6 +25,7 @@ public class AuthController : ControllerBase {
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable, Type = typeof (string))]
     public async Task<IActionResult> Register([FromBody] RegisterUserReq request) {
+        using var activity = _tracer.StartActiveSpan("Register");
         try {
             var token = await _service.Register(request);
             return Ok(token);

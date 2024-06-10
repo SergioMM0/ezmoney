@@ -23,6 +23,7 @@ public class ExpenseRepository : IExpenseRepository {
                 .Distinct()
                 .ToList();
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("An error occurred while getting the expenses from user: " + e.Message);
             throw new ApplicationException("An error occurred while getting the expenses.", e);
         }
     }
@@ -33,6 +34,7 @@ public class ExpenseRepository : IExpenseRepository {
                 .Where(e => e.GroupId == groupId)
                 .ToList();
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("An error occurred while getting the expenses from group: " + e.Message);
             throw new ApplicationException("An error occurred while getting the expenses.", e);
         }
     }
@@ -41,9 +43,11 @@ public class ExpenseRepository : IExpenseRepository {
         try {
             _context.ExpenseTable.Add(expense);
             _context.SaveChanges();
+            Monitoring.Monitoring.Log.Information($"Expense added: {expense.Id} {expense.Amount} {expense.Date} {expense.GroupId} {expense.OwnerId} {expense.Description}");
             AddUserExpense(expense.OwnerId, expense.Id);
             return expense;
         } catch (Exception ex) {
+            Monitoring.Monitoring.Log.Error("An error occurred while adding the expense: " + ex.Message);
             throw new ApplicationException("An error occurred while adding the expense.", ex);
         }
     }
@@ -56,7 +60,9 @@ public class ExpenseRepository : IExpenseRepository {
             };
             _context.UserExpenseTable.Add(userExpense);
             _context.SaveChanges();
+            Monitoring.Monitoring.Log.Information($"UserExpense added: {userExpense.UserId} {userExpense.ExpenseId}");
         } catch (Exception e) {
+            Monitoring.Monitoring.Log.Error("An error occurred while adding the user expense: " + e.Message);
             throw new ApplicationException("An error occurred while adding the user expense.", e);
         }
     }

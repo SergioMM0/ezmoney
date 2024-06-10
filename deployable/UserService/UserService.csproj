@@ -10,11 +10,13 @@
     <ItemGroup>
         <PackageReference Include="EasyNetQ" Version="8.0.0-beta96" />
         <PackageReference Include="EasyNetQ.Serialization.NewtonsoftJson" Version="8.0.0-beta96" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.2"/>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.2" />
+        <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\library\Monitoring\Monitoring.csproj" />
       <ProjectReference Include="..\..\library\RPC\RPC.csproj" />
       <ProjectReference Include="..\..\shared\Domain\Domain.csproj" />
       <ProjectReference Include="..\..\shared\Messages\Messages.csproj" />

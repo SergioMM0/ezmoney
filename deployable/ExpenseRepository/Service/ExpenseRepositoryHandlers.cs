@@ -63,6 +63,7 @@ public class ExpenseRepositoryHandlers : IRequestHandler {
     }
 
     public string HandleRequest(Operation operation, object data) {
+        //TODO: If type of object is Traced, extract the headers
         try {
             return ProcessRequest(operation, data);
         } catch (Exception ex) {
