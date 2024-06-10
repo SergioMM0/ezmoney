@@ -68,6 +68,7 @@ public class UserController : ControllerBase {
         }
         catch (RpcTimeoutException)
         {
+            Monitoring.Monitoring.Log.Error("GetUserByPhoneNumber::Request timed out.");
             return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
         }
         catch (Exception e)
@@ -106,6 +107,7 @@ public class UserController : ControllerBase {
         }
         catch (RpcTimeoutException)
         {
+            Monitoring.Monitoring.Log.Error("GetAllUsers::Request timed out.");
             return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
         }
         catch (Exception e)
@@ -156,6 +158,7 @@ public class UserController : ControllerBase {
         }
         catch (RpcTimeoutException)
         {
+            Monitoring.Monitoring.Log.Error("Create::Request timed out.");
             return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
         }
         catch (Exception e)

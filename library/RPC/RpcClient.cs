@@ -135,7 +135,6 @@ public class RpcClient : IDisposable {
         _consumer.Received += (_, ea) => {
             if (_pendingRequests.TryRemove(ea.BasicProperties.CorrelationId, out var tcs)) {
                 if (tracer != null) {
-                    Monitoring.Monitoring.Log.Debug("RpcClient: ea.BP.Headers {0}", ea.BasicProperties.Headers);
                     var propagatorExtract = new TraceContextPropagator();
                     var parentContext = propagatorExtract.Extract(default, ea.BasicProperties, (req, key) => {
                         return new List<string>(new[] {
@@ -143,13 +142,14 @@ public class RpcClient : IDisposable {
                         });
                     });
                     Baggage.Current = parentContext.Baggage;
-                    Monitoring.Monitoring.Log.Debug("RpcClient: Parent context: {0}", parentContext);
+                    
                     using var consumerActivity = _tracer.StartActiveSpan("RpcClient - ConsumerActivity");
                     using var activity = _tracer.StartActiveSpan("RpcClient - Received");
                 }
                 var response = Encoding.UTF8.GetString(ea.Body.ToArray());
                 tcs.SetResult(response);
             } else {
+                Monitoring.Monitoring.Log.Error($"Correlation ID mismatch or response too late: {ea.BasicProperties.CorrelationId}");
                 Console.WriteLine($"Correlation ID mismatch or response too late: {ea.BasicProperties.CorrelationId}");
             }
         };
@@ -204,6 +204,7 @@ public class RpcClient : IDisposable {
 
         if (completedTask == timeoutTask) {
             _pendingRequests.TryRemove(correlationId, out _);
+            Monitoring.Monitoring.Log.Error("RpcClient::CallAsync::Request timed out.");
             throw new RpcTimeoutException("RPC request timed out.");
         }
 
@@ -221,6 +222,7 @@ public class RpcClient : IDisposable {
         var result = await tcs.Task;
         var response = JsonConvert.DeserializeObject<ApiResponse>(result);
         if (!response.Success) {
+            Monitoring.Monitoring.Log.Error($"RpcClient::CallAsync::Error: {response.ErrorMessage}");
             throw new ApplicationException(response.ErrorMessage);
         }
 

@@ -60,6 +60,7 @@ public class ExpenseController : ControllerBase {
         }
         catch (RpcTimeoutException)
         {
+            Monitoring.Monitoring.Log.Error("GetExpensesFromUser::Request timed out");
             return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
         }
         catch (Exception e)
@@ -106,6 +107,7 @@ public class ExpenseController : ControllerBase {
         }
         catch (RpcTimeoutException)
         {
+            Monitoring.Monitoring.Log.Error("GetExpensesFromGroup::Request timed out");
             return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
         }
         catch (Exception e)
@@ -160,6 +162,7 @@ public class ExpenseController : ControllerBase {
         }
         catch (RpcTimeoutException)
         {
+            Monitoring.Monitoring.Log.Error("Create::Request timed out");
             return StatusCode(StatusCodes.Status408RequestTimeout, "Request timed out");
         }
         catch (Exception e)
