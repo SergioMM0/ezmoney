@@ -1,0 +1,379 @@
+{
+	"info": {
+		"_postman_id": "750d7410-18eb-4644-82a9-bedf4fd85330",
+		"name": "ezmoney",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26440262"
+	},
+	"item": [
+		{
+			"name": "Group",
+			"item": [
+				{
+					"name": "Group",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6IjYiLCJOYW1lIjoic2VyZ2lvMiIsIlBob25lTnVtYmVyIjoiNTUyMjQ0MTExMTE0MTEifQ.4hFH3uC_v_N-fT1i2C0hI2Nn_8M_ZT4szSi7xSv7G8M",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"OwnerId\": 5,\r\n    \"Name\": \"1231\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/groups",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"groups"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Join group",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6IjYiLCJOYW1lIjoic2VyZ2lvMiIsIlBob25lTnVtYmVyIjoiNTUyMjQ0MTExMTE0MTEifQ.4hFH3uC_v_N-fT1i2C0hI2Nn_8M_ZT4szSi7xSv7G8M",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"UserId\": 6,\r\n    \"Token\": \"85c68b0c-fb34-47c3-b963-1fc42dd7bd79\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/groups/join",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"groups",
+								"join"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ById",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6IjYiLCJOYW1lIjoic2VyZ2lvMiIsIlBob25lTnVtYmVyIjoiNTUyMjQ0MTExMTE0MTEifQ.4hFH3uC_v_N-fT1i2C0hI2Nn_8M_ZT4szSi7xSv7G8M",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/groups/5",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"groups",
+								"5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GroupsByUser",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6IjYiLCJOYW1lIjoic2VyZ2lvMiIsIlBob25lTnVtYmVyIjoiNTUyMjQ0MTExMTE0MTEifQ.4hFH3uC_v_N-fT1i2C0hI2Nn_8M_ZT4szSi7xSv7G8M",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/users/6/groups",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"6",
+								"groups"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6IjIiLCJOYW1lIjoic2VyZ2lvIiwiUGhvbmVOdW1iZXIiOiJzZXJnaW8ifQ.wL1WrwigqRupC79_ZRcJgCvz3Kl0uNRG5SGyOtPPPRk",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"MODIFY\",\r\n    \"phoneNumber\": \"MODIFY\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"phonenumber\": \"55224411111411\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Expense",
+			"item": [
+				{
+					"name": "Expense",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6IjYiLCJOYW1lIjoic2VyZ2lvMiIsIlBob25lTnVtYmVyIjoiNTUyMjQ0MTExMTE0MTEifQ.4hFH3uC_v_N-fT1i2C0hI2Nn_8M_ZT4szSi7xSv7G8M",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"OwnerId\": 3,\r\n    \"GroupId\": 5,\r\n    \"Amount\": 2.1,\r\n    \"Description\": \"McDonalds\",\r\n    \"participants\": [\r\n      1, 2, 3, 5\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/expense",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"expense"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ExpensesFromUser",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6IjYiLCJOYW1lIjoic2VyZ2lvMiIsIlBob25lTnVtYmVyIjoiNTUyMjQ0MTExMTE0MTEifQ.4hFH3uC_v_N-fT1i2C0hI2Nn_8M_ZT4szSi7xSv7G8M",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"OwnerId\": 3,\r\n    \"GroupId\": 5,\r\n    \"Amount\": 2.1,\r\n    \"Description\": \"McDonalds\",\r\n    \"participants\": [\r\n      1, 2, 3, 5\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/expenses/5/3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"expenses",
+								"5",
+								"3"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "ByPhoneNumber",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6IjYiLCJOYW1lIjoic2VyZ2lvMiIsIlBob25lTnVtYmVyIjoiNTUyMjQ0MTExMTE0MTEifQ.4hFH3uC_v_N-fT1i2C0hI2Nn_8M_ZT4szSi7xSv7G8M",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/user/55224411111411",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"user",
+								"55224411111411"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
